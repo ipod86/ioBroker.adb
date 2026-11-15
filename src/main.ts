@@ -477,7 +477,7 @@ class AdbAdapter extends utils.Adapter {
 		const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
 		const dev = this.devices.find(d => d.ip === ip);
 		const list: { value: string; label: string; noTranslation?: boolean }[] = [
-			{ value: '', label: 'Automatic (MacroDroid, Tasker, Automate)' },
+			{ value: 'auto', label: 'Automatic' },
 		];
 		if (!dev) {
 			return list;
@@ -508,7 +508,8 @@ class AdbAdapter extends utils.Adapter {
 		if (!dev) {
 			return { error: 'Save the settings first, then try again' };
 		}
-		const chosen = typeof msg.app === 'string' ? msg.app.trim() : '';
+		const app = typeof msg.app === 'string' ? msg.app.trim() : '';
+		const chosen = app === 'auto' ? '' : app;
 		let apps: string[];
 		if (chosen) {
 			if (!isPackageName(chosen)) {

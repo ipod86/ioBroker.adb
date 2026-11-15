@@ -6,7 +6,7 @@
 	"Android 11 and newer: pair each device once. On the device: Settings → Developer options → Wireless debugging → switch on. Then choose one of the two ways below. Pairing is remembered; the device is connected again automatically later, even if its port changes.": "Android 11 и более поздних версий: выполните сопряжение каждого устройства один раз. На устройстве: Настройки → Параметры разработчика → Беспроводная отладка → включить. Тогда выберите один из двух способов ниже. Сопряжение запоминается; устройство подключается снова автоматически позже, даже если его порт изменится.",
 	"Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device. In \"App for reboot\" choose the app from the apps found on the device, or leave \"Automatic\". Only for devices with automatic port.": "Android отключает беспроводную отладку при каждой перезагрузке. Приложение автоматизации на устройстве (MacroDroid, Tasker или Automate) может снова включить его самостоятельно: нажмите «Разрешить приложение автоматизации» в строке устройства. В разделе «Приложение для перезагрузки» выберите приложение из найденных на устройстве приложений или оставьте «Автоматически». Только для устройств с автоматическим портом.",
 	"App for reboot (optional)": "Приложение для перезагрузки (необязательно)",
-	"Automatic (MacroDroid, Tasker, Automate)": "Автоматически (MacroDroid, Tasker, Automate)",
+	"Automatic": "Автоматический",
 	"Check connections every": "Проверяйте соединения каждые",
 	"Devices": "Устройства",
 	"Disconnected devices are connected again in this interval": "Отключенные устройства в этот интервал снова подключаются",

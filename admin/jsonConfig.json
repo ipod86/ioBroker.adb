@@ -75,7 +75,7 @@
 							"command": "listApps",
 							"jsonData": "{\"ip\": \"${data.ip}\"}",
 							"manual": true,
-							"default": "",
+							"default": "auto",
 							"alsoDependsOn": [
 								"ip"
 							],
