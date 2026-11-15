@@ -109,6 +109,22 @@ export class Discovery {
 	}
 
 	/**
+	 * Forgets an announced connect port that refused the connection
+	 * (wireless debugging was switched off without a goodbye in the network).
+	 *
+	 * @param ip IP address of the device
+	 * @param port port that refused the connection
+	 */
+	forgetConnect(ip: string, port: number): void {
+		for (const [name, s] of this.connect) {
+			if (s.ip === ip && s.port === port) {
+				this.connect.delete(name);
+				this.log.debug(`mDNS adb-tls-connect: ${name} (${ip}:${port}) refused the connection, forgotten`);
+			}
+		}
+	}
+
+	/**
 	 * Pairing port of a device that currently shows the "pair with code" dialog.
 	 *
 	 * @param ip IP address of the device

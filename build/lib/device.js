@@ -594,6 +594,10 @@ class AndroidDevice {
       return true;
     } catch (e) {
       const msg = errorText(e);
+      if (!this.fixedPort && /refused|ECONNREFUSED/i.test(msg)) {
+        this.discovery.forgetConnect(this.ip, port);
+        this.discovery.refresh();
+      }
       await this.setStatus(
         /unauthorized|did not answer/i.test(msg) ? 'Device does not allow the connection: confirm "Allow debugging" on the device' : `Can not connect: ${msg}`,
         quiet
