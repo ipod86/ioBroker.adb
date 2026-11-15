@@ -20,6 +20,7 @@ var device_exports = {};
 __export(device_exports, {
   AndroidDevice: () => AndroidDevice,
   DEVICE_STATES: () => DEVICE_STATES,
+  WIRELESS_STATES: () => WIRELESS_STATES,
   errorText: () => errorText
 });
 module.exports = __toCommonJS(device_exports);
@@ -118,6 +119,19 @@ const DEVICE_STATES = {
     desc: 'Saved as file in the adapter folder, see "result"'
   }
 };
+const WIRELESS_STATES = {
+  hideNotification: {
+    name: { en: "Hide the debugging notification", de: "Debugging-Benachrichtigung ausblenden" },
+    type: "boolean",
+    role: "switch",
+    read: true,
+    write: true,
+    def: false,
+    desc: 'true: the notification "Wireless debugging connected" is snoozed and snoozed again after every connection; false: shown again'
+  }
+};
+const SNOOZE_MS = 365 * 24 * 3600 * 1e3;
+const DEFAULT_NOTIFICATION_KEY = "-1|android|62|null|1000";
 const WAIT_MS = 1e4;
 class AndroidDevice {
   /**
@@ -145,6 +159,8 @@ class AndroidDevice {
   busy;
   lastStatus = "";
   infoRead = false;
+  /** Hide the debugging notification */
+  hideNotification = false;
   /** Text for logs */
   get label() {
     return `${this.name} (${this.ip}${this.fixedPort ? `:${this.fixedPort}` : ""})`;
@@ -244,6 +260,45 @@ class AndroidDevice {
     await this.setStatus("Connected", true);
     if (!this.infoRead) {
       await this.readInfo();
+    }
+    if (this.hideNotification) {
+      setTimeout(() => void this.applyNotification(), 3e3);
+    }
+  }
+  /**
+   * Switches hiding of the debugging notification on or off.
+   *
+   * @param hide true to hide
+   */
+  async setHideNotification(hide) {
+    this.hideNotification = hide;
+    if (this.connected) {
+      await this.applyNotification();
+    }
+  }
+  /** Snoozes or unsnoozes the debugging notification, depending on the setting. */
+  async applyNotification() {
+    if (this.fixedPort || !this.connected) {
+      return;
+    }
+    try {
+      const keys = /* @__PURE__ */ new Set([DEFAULT_NOTIFICATION_KEY]);
+      const dump = await this.run(
+        "dumpsys notification --noredact | grep 'channel=DEVELOPER_IMPORTANT' | grep -o 'key=[^ ]*'"
+      );
+      for (const line of dump.split(/\r?\n/)) {
+        const key = line.trim().replace(/^key=/, "");
+        if (/^-?\d+\|android\|\d+\|/.test(key)) {
+          keys.add(key);
+        }
+      }
+      for (const key of keys) {
+        const cmd = this.hideNotification ? `cmd notification snooze --for ${SNOOZE_MS} '${key}'` : `cmd notification unsnooze '${key}'`;
+        await this.run(cmd);
+      }
+      this.host.log.debug(`${this.label}: debugging notification ${this.hideNotification ? "snoozed" : "shown"}`);
+    } catch (e) {
+      this.host.log.warn(`${this.label}: could not change the debugging notification: ${errorText(e)}`);
     }
   }
   /** Reads model and Android version. */
@@ -428,6 +483,7 @@ function errorText(e) {
 0 && (module.exports = {
   AndroidDevice,
   DEVICE_STATES,
+  WIRELESS_STATES,
   errorText
 });
 //# sourceMappingURL=device.js.map

@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Adb, type Client } from '@devicefarmer/adbkit';
 import { hostRequest } from './lib/adbHost';
-import { AndroidDevice, DEVICE_STATES, errorText } from './lib/device';
+import { AndroidDevice, DEVICE_STATES, WIRELESS_STATES, errorText } from './lib/device';
 import { Discovery } from './lib/discovery';
 import {
 	checkDevices,
@@ -42,6 +42,7 @@ class AdbAdapter extends utils.Adapter {
 	private discovery?: Discovery;
 	private devices: AndroidDevice[] = [];
 	private timer?: ioBroker.Interval;
+	private snoozeTimer?: ioBroker.Interval;
 	private serverHost = '127.0.0.1';
 	private serverPort = 5037;
 	private serverOk?: boolean;
@@ -88,6 +89,10 @@ class AdbAdapter extends utils.Adapter {
 			const dev = new AndroidDevice(this, this.client, this.discovery, cfg);
 			await this.createDeviceObjects(dev);
 			await this.setState(dev.stateId('connection'), false, true);
+			if (!dev.fixedPort) {
+				const hide = await this.getStateAsync(dev.stateId('hideNotification'));
+				dev.hideNotification = hide?.val === true;
+			}
 			this.devices.push(dev);
 		}
 		if (!this.devices.length) {
@@ -99,6 +104,17 @@ class AdbAdapter extends utils.Adapter {
 		this.setTimeout(() => void this.tick(), 3000);
 		const interval = Math.max(10, Number(this.config.reconnectInterval) || 30);
 		this.timer = this.setInterval(() => void this.tick(), interval * 1000);
+		// renew the snooze of the debugging notification now and then
+		this.snoozeTimer = this.setInterval(
+			() => {
+				for (const dev of this.devices) {
+					if (dev.hideNotification) {
+						void dev.applyNotification();
+					}
+				}
+			},
+			6 * 3600 * 1000,
+		);
 	}
 
 	/** Checks the adb server and reconnects devices */
@@ -183,6 +199,11 @@ class AdbAdapter extends utils.Adapter {
 		for (const [id, common] of Object.entries(DEVICE_STATES)) {
 			await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
 		}
+		if (!dev.fixedPort) {
+			for (const [id, common] of Object.entries(WIRELESS_STATES)) {
+				await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
+			}
+		}
 	}
 
 	/**
@@ -199,6 +220,11 @@ class AdbAdapter extends utils.Adapter {
 		const name = parts.pop()!;
 		const objectId = parts.pop();
 		const dev = this.devices.find(d => d.objectId === objectId);
+		if (dev && !dev.fixedPort && name === 'hideNotification') {
+			await dev.setHideNotification(state.val === true || state.val === 'true' || state.val === 1);
+			await this.setState(id, dev.hideNotification, true);
+			return;
+		}
 		if (!dev || !DEVICE_STATES[name]?.write) {
 			return;
 		}
@@ -503,6 +529,9 @@ class AdbAdapter extends utils.Adapter {
 		try {
 			if (this.timer) {
 				this.clearInterval(this.timer);
+			}
+			if (this.snoozeTimer) {
+				this.clearInterval(this.snoozeTimer);
 			}
 			this.tracker?.end();
 			this.discovery?.stop();

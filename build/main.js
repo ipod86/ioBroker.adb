@@ -38,6 +38,7 @@ class AdbAdapter extends utils.Adapter {
   discovery;
   devices = [];
   timer;
+  snoozeTimer;
   serverHost = "127.0.0.1";
   serverPort = 5037;
   serverOk;
@@ -71,6 +72,10 @@ class AdbAdapter extends utils.Adapter {
       const dev = new import_device.AndroidDevice(this, this.client, this.discovery, cfg);
       await this.createDeviceObjects(dev);
       await this.setState(dev.stateId("connection"), false, true);
+      if (!dev.fixedPort) {
+        const hide = await this.getStateAsync(dev.stateId("hideNotification"));
+        dev.hideNotification = (hide == null ? void 0 : hide.val) === true;
+      }
       this.devices.push(dev);
     }
     if (!this.devices.length) {
@@ -80,6 +85,16 @@ class AdbAdapter extends utils.Adapter {
     this.setTimeout(() => void this.tick(), 3e3);
     const interval = Math.max(10, Number(this.config.reconnectInterval) || 30);
     this.timer = this.setInterval(() => void this.tick(), interval * 1e3);
+    this.snoozeTimer = this.setInterval(
+      () => {
+        for (const dev of this.devices) {
+          if (dev.hideNotification) {
+            void dev.applyNotification();
+          }
+        }
+      },
+      6 * 3600 * 1e3
+    );
   }
   /** Checks the adb server and reconnects devices */
   async tick() {
@@ -159,6 +174,11 @@ class AdbAdapter extends utils.Adapter {
     for (const [id, common] of Object.entries(import_device.DEVICE_STATES)) {
       await this.extendObject(dev.stateId(id), { type: "state", common, native: {} });
     }
+    if (!dev.fixedPort) {
+      for (const [id, common] of Object.entries(import_device.WIRELESS_STATES)) {
+        await this.extendObject(dev.stateId(id), { type: "state", common, native: {} });
+      }
+    }
   }
   /**
    * Runs commands written to device states.
@@ -175,6 +195,11 @@ class AdbAdapter extends utils.Adapter {
     const name = parts.pop();
     const objectId = parts.pop();
     const dev = this.devices.find((d) => d.objectId === objectId);
+    if (dev && !dev.fixedPort && name === "hideNotification") {
+      await dev.setHideNotification(state.val === true || state.val === "true" || state.val === 1);
+      await this.setState(id, dev.hideNotification, true);
+      return;
+    }
     if (!dev || !((_a = import_device.DEVICE_STATES[name]) == null ? void 0 : _a.write)) {
       return;
     }
@@ -462,6 +487,9 @@ class AdbAdapter extends utils.Adapter {
     try {
       if (this.timer) {
         this.clearInterval(this.timer);
+      }
+      if (this.snoozeTimer) {
+        this.clearInterval(this.snoozeTimer);
       }
       (_a = this.tracker) == null ? void 0 : _a.end();
       (_b = this.discovery) == null ? void 0 : _b.stop();

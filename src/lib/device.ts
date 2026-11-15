@@ -107,6 +107,24 @@ export const DEVICE_STATES: Record<string, ioBroker.StateCommon> = {
 	},
 };
 
+/** States only for devices with wireless debugging (automatic port) */
+export const WIRELESS_STATES: Record<string, ioBroker.StateCommon> = {
+	hideNotification: {
+		name: { en: 'Hide the debugging notification', de: 'Debugging-Benachrichtigung ausblenden' },
+		type: 'boolean',
+		role: 'switch',
+		read: true,
+		write: true,
+		def: false,
+		desc: 'true: the notification "Wireless debugging connected" is snoozed and snoozed again after every connection; false: shown again',
+	},
+};
+
+/** Snooze time of the debugging notification: one year, renewed after every connection */
+const SNOOZE_MS = 365 * 24 * 3600 * 1000;
+/** Key of the wireless debugging notification in Android (SystemMessage.NOTE_ADB_WIFI_ACTIVE) */
+const DEFAULT_NOTIFICATION_KEY = '-1|android|62|null|1000';
+
 /** What the device needs from the adapter */
 export interface DeviceHost {
 	namespace: string;
@@ -132,6 +150,8 @@ export class AndroidDevice {
 	private busy?: Promise<boolean>;
 	private lastStatus = '';
 	private infoRead = false;
+	/** Hide the debugging notification */
+	hideNotification = false;
 
 	/**
 	 * @param host adapter
@@ -257,6 +277,50 @@ export class AndroidDevice {
 		await this.setStatus('Connected', true);
 		if (!this.infoRead) {
 			await this.readInfo();
+		}
+		if (this.hideNotification) {
+			// Android posts the notification right after the connection
+			setTimeout(() => void this.applyNotification(), 3000);
+		}
+	}
+
+	/**
+	 * Switches hiding of the debugging notification on or off.
+	 *
+	 * @param hide true to hide
+	 */
+	async setHideNotification(hide: boolean): Promise<void> {
+		this.hideNotification = hide;
+		if (this.connected) {
+			await this.applyNotification();
+		}
+	}
+
+	/** Snoozes or unsnoozes the debugging notification, depending on the setting. */
+	async applyNotification(): Promise<void> {
+		if (this.fixedPort || !this.connected) {
+			return;
+		}
+		try {
+			const keys = new Set<string>([DEFAULT_NOTIFICATION_KEY]);
+			const dump = await this.run(
+				"dumpsys notification --noredact | grep 'channel=DEVELOPER_IMPORTANT' | grep -o 'key=[^ ]*'",
+			);
+			for (const line of dump.split(/\r?\n/)) {
+				const key = line.trim().replace(/^key=/, '');
+				if (/^-?\d+\|android\|\d+\|/.test(key)) {
+					keys.add(key);
+				}
+			}
+			for (const key of keys) {
+				const cmd = this.hideNotification
+					? `cmd notification snooze --for ${SNOOZE_MS} '${key}'`
+					: `cmd notification unsnooze '${key}'`;
+				await this.run(cmd);
+			}
+			this.host.log.debug(`${this.label}: debugging notification ${this.hideNotification ? 'snoozed' : 'shown'}`);
+		} catch (e) {
+			this.host.log.warn(`${this.label}: could not change the debugging notification: ${errorText(e)}`);
 		}
 	}
 
