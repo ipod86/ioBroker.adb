@@ -161,6 +161,7 @@ class AndroidDevice {
   infoRead = false;
   /** Hide the debugging notification */
   hideNotification = false;
+  notifyTimer;
   /** Text for logs */
   get label() {
     return `${this.name} (${this.ip}${this.fixedPort ? `:${this.fixedPort}` : ""})`;
@@ -262,7 +263,8 @@ class AndroidDevice {
       await this.readInfo();
     }
     if (this.hideNotification) {
-      setTimeout(() => void this.applyNotification(), 3e3);
+      clearTimeout(this.notifyTimer);
+      this.notifyTimer = setTimeout(() => void this.applyNotification(), 3e3);
     }
   }
   /**
@@ -456,6 +458,7 @@ class AndroidDevice {
   }
   /** Closes the connection */
   async close() {
+    clearTimeout(this.notifyTimer);
     if (this.serial) {
       await this.client.disconnect(this.ip, (0, import_util.portOfSerial)(this.serial)).catch(() => void 0);
     }

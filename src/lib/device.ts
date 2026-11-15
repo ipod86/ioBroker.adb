@@ -152,6 +152,7 @@ export class AndroidDevice {
 	private infoRead = false;
 	/** Hide the debugging notification */
 	hideNotification = false;
+	private notifyTimer?: NodeJS.Timeout;
 
 	/**
 	 * @param host adapter
@@ -280,7 +281,8 @@ export class AndroidDevice {
 		}
 		if (this.hideNotification) {
 			// Android posts the notification right after the connection
-			setTimeout(() => void this.applyNotification(), 3000);
+			clearTimeout(this.notifyTimer);
+			this.notifyTimer = setTimeout(() => void this.applyNotification(), 3000);
 		}
 	}
 
@@ -491,6 +493,7 @@ export class AndroidDevice {
 
 	/** Closes the connection */
 	async close(): Promise<void> {
+		clearTimeout(this.notifyTimer);
 		if (this.serial) {
 			await this.client.disconnect(this.ip, portOfSerial(this.serial)).catch(() => undefined);
 		}
