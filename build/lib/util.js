@@ -114,7 +114,7 @@ const AUTOMATION_APPS = {
   "com.llamalab.automate": "Automate"
 };
 function parsePackages(output) {
-  return output.split(/\r?\n/).map((l) => l.trim().replace(/^package:/, "")).filter(Boolean);
+  return output.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.startsWith("package:")).map((l) => l.substring(8).trim()).filter(Boolean);
 }
 function isPackageName(pkg) {
   return /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/.test(pkg);

@@ -4,6 +4,8 @@ import {
 	cleanShellCommand,
 	deviceObjectId,
 	extractPng,
+	isPackageName,
+	parsePackages,
 	hostOfSerial,
 	isValidPairingCode,
 	normalizePairingCode,
@@ -74,6 +76,17 @@ describe('util', () => {
 		const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 		expect(extractPng(Buffer.concat([Buffer.from('WARNING: x\n'), png])).equals(png)).to.equal(true);
 		expect(extractPng(png).equals(png)).to.equal(true);
+	});
+
+	it('parsePackages ignores error lines', () => {
+		expect(
+			parsePackages(
+				'package:net.dinglisch.android.taskerm\nError: java.lang.SecurityException: x\r\npackage:allterco.bg.shelly\n',
+			),
+		).to.deep.equal(['net.dinglisch.android.taskerm', 'allterco.bg.shelly']);
+		expect(isPackageName('com.arlosoft.macrodroid')).to.equal(true);
+		expect(isPackageName('kein paket')).to.equal(false);
+		expect(isPackageName('x; reboot')).to.equal(false);
 	});
 
 	it('checkDevices', () => {

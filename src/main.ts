@@ -416,7 +416,7 @@ class AdbAdapter extends utils.Adapter {
 			return [];
 		}
 		try {
-			const pkgs = parsePackages(await dev.run('pm list packages -3')).sort();
+			const pkgs = parsePackages(await dev.run('pm list packages -3 --user 0')).sort();
 			const known = pkgs.filter(p => AUTOMATION_APPS[p]);
 			const rest = pkgs.filter(p => !AUTOMATION_APPS[p]);
 			return [
@@ -449,7 +449,7 @@ class AdbAdapter extends utils.Adapter {
 			}
 			apps = [chosen];
 		} else {
-			const installed = parsePackages(await dev.run('pm list packages'));
+			const installed = parsePackages(await dev.run('pm list packages --user 0'));
 			apps = Object.keys(AUTOMATION_APPS).filter(p => installed.includes(p));
 			if (!apps.length) {
 				return { result: 'noAutomationApp', args: [Object.values(AUTOMATION_APPS).join(', ')] };

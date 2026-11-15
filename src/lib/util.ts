@@ -184,7 +184,9 @@ export const AUTOMATION_APPS: Record<string, string> = {
 export function parsePackages(output: string): string[] {
 	return output
 		.split(/\r?\n/)
-		.map(l => l.trim().replace(/^package:/, ''))
+		.map(l => l.trim())
+		.filter(l => l.startsWith('package:'))
+		.map(l => l.substring(8).trim())
 		.filter(Boolean);
 }
 
