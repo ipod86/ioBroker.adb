@@ -34,7 +34,15 @@ class AdbAdapter extends utils.Adapter {
 	private serverHost = '127.0.0.1';
 	private serverPort = 5037;
 	private serverOk?: boolean;
-	private qr?: { name: string; password: string; created: number };
+	private qr?: {
+		name: string;
+		password: string;
+		created: number;
+		/** result of the pairing started in the background */
+		done?: { ip?: string; error?: string };
+		/** "wait for the device" requests from the settings page */
+		listeners: ((r: { ip?: string; error?: string }) => void)[];
+	};
 
 	/**
 	 * @param options adapter options
@@ -251,35 +259,98 @@ class AdbAdapter extends utils.Adapter {
 		return this.pairedAnswer(ip, msg.devices);
 	}
 
-	/** Creates the QR code text for "Pair device with QR code" */
+	/**
+	 * Creates the QR code text for "Pair device with QR code" and starts waiting for the device in the background,
+	 * so the device is paired as soon as it has scanned the code.
+	 */
 	private qrCode(): { text: string } {
-		if (!this.qr || Date.now() - this.qr.created > 10 * 60_000) {
-			this.qr = {
+		if (!this.qr || this.qr.done || Date.now() - this.qr.created > 10 * 60_000) {
+			const qr: NonNullable<AdbAdapter['qr']> = {
 				name: `iobroker-${randomBytes(3).toString('hex')}`,
 				password: String(randomInt(100000, 1000000)),
 				created: Date.now(),
+				listeners: [],
 			};
+			this.qr = qr;
+			void this.qrBackground(qr);
 		}
 		return { text: pairingQrText(this.qr.name, this.qr.password) };
 	}
 
 	/**
-	 * Waits until the device scanned the QR code and pairs.
+	 * Waits up to 10 minutes for the device that scans the QR code and pairs it.
+	 *
+	 * @param qr QR code data
+	 */
+	private async qrBackground(qr: NonNullable<AdbAdapter['qr']>): Promise<void> {
+		const found = await this.discovery!.waitForPairing(s => s.name === qr.name, 10 * 60_000);
+		if (this.qr !== qr) {
+			return;
+		}
+		if (!found) {
+			qr.done = { error: 'No device has scanned the QR code' };
+		} else {
+			this.log.info(`${found.ip} has scanned the QR code, pairing`);
+			try {
+				await this.pair(found.ip, found.port, qr.password);
+				qr.done = { ip: found.ip };
+			} catch (e) {
+				qr.done = { error: errorText(e) };
+				this.log.warn(`Pairing with QR code failed: ${qr.done.error}`);
+			}
+		}
+		if (qr.listeners.length) {
+			qr.listeners.forEach(l => l(qr.done!));
+			qr.listeners = [];
+		} else if (qr.done.ip) {
+			// nobody waits in the settings page: add the device to the configuration directly
+			await this.addDeviceToConfig(qr.done.ip);
+		}
+	}
+
+	/**
+	 * Adds a paired device to the saved configuration (restarts the adapter).
+	 *
+	 * @param ip device IP address
+	 */
+	private async addDeviceToConfig(ip: string): Promise<void> {
+		const devices = this.config.devices ?? [];
+		if (devices.some(d => String(d.ip).trim() === ip)) {
+			return;
+		}
+		const entry = this.pairedAnswer(ip, devices).native as { devices: DeviceConfig[] };
+		this.log.info(`Adding paired device ${ip} to the device list`);
+		await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, { native: { devices: entry.devices } });
+	}
+
+	/**
+	 * Answer for "wait for the device": result of the QR pairing, waits up to 60 seconds.
 	 *
 	 * @param msg devices from the form
 	 */
 	private async pairWithQr(msg: Record<string, unknown>): Promise<Record<string, unknown>> {
-		if (!this.qr) {
+		const qr = this.qr;
+		if (!qr) {
 			return { error: 'Show the QR code first' };
 		}
-		const { name, password } = this.qr;
-		const found = await this.discovery!.waitForPairing(s => s.name === name, 60_000);
-		if (!found) {
-			return { error: 'No device has scanned the QR code within 60 seconds' };
+		const result =
+			qr.done ??
+			(await new Promise<{ ip?: string; error?: string }>(resolve => {
+				let timer: ioBroker.Timeout | undefined = undefined;
+				const listener = (r: { ip?: string; error?: string }): void => {
+					this.clearTimeout(timer);
+					resolve(r);
+				};
+				timer = this.setTimeout(() => {
+					qr.listeners = qr.listeners.filter(l => l !== listener);
+					resolve({ error: 'No device has scanned the QR code within 60 seconds' });
+				}, 60_000);
+				qr.listeners.push(listener);
+			}));
+		if (!result.ip) {
+			return { error: result.error };
 		}
-		await this.pair(found.ip, found.port, password);
-		this.qr = undefined;
-		return this.pairedAnswer(found.ip, msg.devices);
+		return this.pairedAnswer(result.ip, msg.devices);
 	}
 
 	/**

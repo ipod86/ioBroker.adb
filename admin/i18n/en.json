@@ -19,7 +19,6 @@
 	"Paired with %s. The device will be connected within a few seconds.": "Paired with %s. The device will be connected within a few seconds.",
 	"Paired with %s and added to the device list. Please save the settings.": "Paired with %s and added to the device list. Please save the settings.",
 	"Pair with QR code": "Pair with QR code",
-	"Show the QR code, then tap \"Wait for the device\". On the device tap \"Pair device with QR code\" and scan it. The device is added to the list by itself.": "Show the QR code, then tap \"Wait for the device\". On the device tap \"Pair device with QR code\" and scan it. The device is added to the list by itself.",
 	"Show QR code": "Show QR code",
 	"Wait for the device (60 s)": "Wait for the device (60 s)",
 	"adb server": "adb server",
@@ -35,5 +34,6 @@
 	"The pairing code has 6 digits": "The pairing code has 6 digits",
 	"Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.": "Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.",
 	"Show the QR code first": "Show the QR code first",
-	"No device has scanned the QR code within 60 seconds": "No device has scanned the QR code within 60 seconds"
+	"No device has scanned the QR code within 60 seconds": "No device has scanned the QR code within 60 seconds",
+	"Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.": "Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result."
 }

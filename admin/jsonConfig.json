@@ -170,7 +170,7 @@
 				},
 				"qrSteps": {
 					"type": "staticText",
-					"text": "Show the QR code, then tap \"Wait for the device\". On the device tap \"Pair device with QR code\" and scan it. The device is added to the list by itself.",
+					"text": "Show the QR code and scan it on the device in Wireless debugging \u2192 \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.",
 					"xs": 12,
 					"sm": 12,
 					"md": 12,
