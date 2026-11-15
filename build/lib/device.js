@@ -28,7 +28,19 @@ var import_adbkit = require("@devicefarmer/adbkit");
 var import_util = require("./util");
 const DEVICE_STATES = {
   connection: {
-    name: { en: "Connected", de: "Verbunden" },
+    name: {
+      en: "Connected",
+      de: "Verbunden",
+      ru: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u043E",
+      pt: "Conectado",
+      nl: "Verbonden",
+      fr: "Connect\xE9",
+      it: "Connesso",
+      es: "Conectado",
+      pl: "Po\u0142\u0105czono",
+      uk: "\u041F\u0456\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u043E",
+      "zh-cn": "\u5DF2\u8FDE\u63A5"
+    },
     type: "boolean",
     role: "indicator.connected",
     read: true,
@@ -36,7 +48,19 @@ const DEVICE_STATES = {
     def: false
   },
   status: {
-    name: { en: "Connection status", de: "Verbindungsstatus" },
+    name: {
+      en: "Connection status",
+      de: "Verbindungsstatus",
+      ru: "\u0421\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F",
+      pt: "Estado da conex\xE3o",
+      nl: "Verbindingsstatus",
+      fr: "\xC9tat de la connexion",
+      it: "Stato della connessione",
+      es: "Estado de la conexi\xF3n",
+      pl: "Stan po\u0142\u0105czenia",
+      uk: "\u0421\u0442\u0430\u043D \u043F\u0456\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u043D\u044F",
+      "zh-cn": "\u8FDE\u63A5\u72B6\u6001"
+    },
     type: "string",
     role: "text",
     read: true,
@@ -44,28 +68,76 @@ const DEVICE_STATES = {
     def: ""
   },
   port: {
-    name: { en: "Current port", de: "Aktueller Port" },
+    name: {
+      en: "Current port",
+      de: "Aktueller Port",
+      ru: "\u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u043F\u043E\u0440\u0442",
+      pt: "Porta atual",
+      nl: "Huidige poort",
+      fr: "Port actuel",
+      it: "Porta attuale",
+      es: "Puerto actual",
+      pl: "Bie\u017C\u0105cy port",
+      uk: "\u041F\u043E\u0442\u043E\u0447\u043D\u0438\u0439 \u043F\u043E\u0440\u0442",
+      "zh-cn": "\u5F53\u524D\u7AEF\u53E3"
+    },
     type: "number",
     role: "value",
     read: true,
     write: false
   },
   model: {
-    name: { en: "Model", de: "Modell" },
+    name: {
+      en: "Model",
+      de: "Modell",
+      ru: "\u041C\u043E\u0434\u0435\u043B\u044C",
+      pt: "Modelo",
+      nl: "Model",
+      fr: "Mod\xE8le",
+      it: "Modello",
+      es: "Modelo",
+      pl: "Model",
+      uk: "\u041C\u043E\u0434\u0435\u043B\u044C",
+      "zh-cn": "\u578B\u53F7"
+    },
     type: "string",
     role: "text",
     read: true,
     write: false
   },
   androidVersion: {
-    name: { en: "Android version", de: "Android-Version" },
+    name: {
+      en: "Android version",
+      de: "Android-Version",
+      ru: "\u0412\u0435\u0440\u0441\u0438\u044F Android",
+      pt: "Vers\xE3o do Android",
+      nl: "Android-versie",
+      fr: "Version Android",
+      it: "Versione Android",
+      es: "Versi\xF3n de Android",
+      pl: "Wersja Androida",
+      uk: "\u0412\u0435\u0440\u0441\u0456\u044F Android",
+      "zh-cn": "Android \u7248\u672C"
+    },
     type: "string",
     role: "text",
     read: true,
     write: false
   },
   shell: {
-    name: { en: "Shell command", de: "Shell-Befehl" },
+    name: {
+      en: "Shell command",
+      de: "Shell-Befehl",
+      ru: "\u041A\u043E\u043C\u0430\u043D\u0434\u0430 \u043E\u0431\u043E\u043B\u043E\u0447\u043A\u0438",
+      pt: "Comando shell",
+      nl: "Shell-opdracht",
+      fr: "Commande shell",
+      it: "Comando shell",
+      es: "Comando de shell",
+      pl: "Polecenie pow\u0142oki",
+      uk: "\u041A\u043E\u043C\u0430\u043D\u0434\u0430 \u043E\u0431\u043E\u043B\u043E\u043D\u043A\u0438",
+      "zh-cn": "Shell \u547D\u4EE4"
+    },
     type: "string",
     role: "text",
     read: true,
@@ -73,7 +145,19 @@ const DEVICE_STATES = {
     desc: 'e.g. "input keyevent 26"; the answer is written to "result"'
   },
   keyevent: {
-    name: { en: "Send key", de: "Taste senden" },
+    name: {
+      en: "Send key",
+      de: "Taste senden",
+      ru: "\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u043A\u043B\u0430\u0432\u0438\u0448\u0443",
+      pt: "Enviar tecla",
+      nl: "Toets sturen",
+      fr: "Envoyer une touche",
+      it: "Invia tasto",
+      es: "Enviar tecla",
+      pl: "Wy\u015Blij klawisz",
+      uk: "\u041D\u0430\u0434\u0456\u0441\u043B\u0430\u0442\u0438 \u043A\u043B\u0430\u0432\u0456\u0448\u0443",
+      "zh-cn": "\u53D1\u9001\u6309\u952E"
+    },
     type: "string",
     role: "text",
     read: true,
@@ -81,14 +165,38 @@ const DEVICE_STATES = {
     desc: "Key code or name, e.g. 26, POWER, HOME, BACK, VOLUME_UP"
   },
   result: {
-    name: { en: "Command result", de: "Ergebnis des Befehls" },
+    name: {
+      en: "Command result",
+      de: "Ergebnis des Befehls",
+      ru: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043A\u043E\u043C\u0430\u043D\u0434\u044B",
+      pt: "Resultado do comando",
+      nl: "Resultaat van de opdracht",
+      fr: "R\xE9sultat de la commande",
+      it: "Risultato del comando",
+      es: "Resultado del comando",
+      pl: "Wynik polecenia",
+      uk: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043A\u043E\u043C\u0430\u043D\u0434\u0438",
+      "zh-cn": "\u547D\u4EE4\u7ED3\u679C"
+    },
     type: "string",
     role: "text",
     read: true,
     write: false
   },
   startApp: {
-    name: { en: "Start an app", de: "App starten" },
+    name: {
+      en: "Start an app",
+      de: "App starten",
+      ru: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435",
+      pt: "Iniciar um app",
+      nl: "App starten",
+      fr: "Lancer une application",
+      it: "Avvia un'app",
+      es: "Iniciar una app",
+      pl: "Uruchom aplikacj\u0119",
+      uk: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u0438 \u0437\u0430\u0441\u0442\u043E\u0441\u0443\u043D\u043E\u043A",
+      "zh-cn": "\u542F\u52A8\u5E94\u7528"
+    },
     type: "string",
     role: "text",
     read: true,
@@ -96,7 +204,19 @@ const DEVICE_STATES = {
     desc: "Component like com.example.app/.MainActivity"
   },
   stopApp: {
-    name: { en: "Stop an app", de: "App beenden" },
+    name: {
+      en: "Stop an app",
+      de: "App beenden",
+      ru: "\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435",
+      pt: "Parar um app",
+      nl: "App stoppen",
+      fr: "Arr\xEAter une application",
+      it: "Arresta un'app",
+      es: "Detener una app",
+      pl: "Zatrzymaj aplikacj\u0119",
+      uk: "\u0417\u0443\u043F\u0438\u043D\u0438\u0442\u0438 \u0437\u0430\u0441\u0442\u043E\u0441\u0443\u043D\u043E\u043A",
+      "zh-cn": "\u505C\u6B62\u5E94\u7528"
+    },
     type: "string",
     role: "text",
     read: true,
@@ -104,14 +224,38 @@ const DEVICE_STATES = {
     desc: "Package name like com.example.app"
   },
   reboot: {
-    name: { en: "Reboot device", de: "Ger\xE4t neu starten" },
+    name: {
+      en: "Reboot device",
+      de: "Ger\xE4t neu starten",
+      ru: "\u041F\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E",
+      pt: "Reiniciar dispositivo",
+      nl: "Apparaat herstarten",
+      fr: "Red\xE9marrer l'appareil",
+      it: "Riavvia dispositivo",
+      es: "Reiniciar dispositivo",
+      pl: "Uruchom ponownie urz\u0105dzenie",
+      uk: "\u041F\u0435\u0440\u0435\u0437\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0438\u0442\u0438 \u043F\u0440\u0438\u0441\u0442\u0440\u0456\u0439",
+      "zh-cn": "\u91CD\u542F\u8BBE\u5907"
+    },
     type: "boolean",
     role: "button",
     read: false,
     write: true
   },
   screencap: {
-    name: { en: "Take screenshot", de: "Bildschirmfoto aufnehmen" },
+    name: {
+      en: "Take screenshot",
+      de: "Bildschirmfoto aufnehmen",
+      ru: "\u0421\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u043D\u0438\u043C\u043E\u043A \u044D\u043A\u0440\u0430\u043D\u0430",
+      pt: "Capturar tela",
+      nl: "Schermafbeelding maken",
+      fr: "Faire une capture d'\xE9cran",
+      it: "Cattura schermata",
+      es: "Hacer captura de pantalla",
+      pl: "Zr\xF3b zrzut ekranu",
+      uk: "\u0417\u0440\u043E\u0431\u0438\u0442\u0438 \u0437\u043D\u0456\u043C\u043E\u043A \u0435\u043A\u0440\u0430\u043D\u0430",
+      "zh-cn": "\u622A\u5C4F"
+    },
     type: "boolean",
     role: "button",
     read: false,
@@ -121,7 +265,19 @@ const DEVICE_STATES = {
 };
 const WIRELESS_STATES = {
   hideNotification: {
-    name: { en: "Hide the debugging notification", de: "Debugging-Benachrichtigung ausblenden" },
+    name: {
+      en: "Hide the debugging notification",
+      de: "Debugging-Benachrichtigung ausblenden",
+      ru: "\u0421\u043A\u0440\u044B\u0442\u044C \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435 \u043E\u0431 \u043E\u0442\u043B\u0430\u0434\u043A\u0435",
+      pt: "Ocultar a notifica\xE7\xE3o de depura\xE7\xE3o",
+      nl: "Debugmelding verbergen",
+      fr: "Masquer la notification de d\xE9bogage",
+      it: "Nascondi la notifica di debug",
+      es: "Ocultar la notificaci\xF3n de depuraci\xF3n",
+      pl: "Ukryj powiadomienie o debugowaniu",
+      uk: "\u041F\u0440\u0438\u0445\u043E\u0432\u0430\u0442\u0438 \u0441\u043F\u043E\u0432\u0456\u0449\u0435\u043D\u043D\u044F \u043F\u0440\u043E \u043D\u0430\u043B\u0430\u0433\u043E\u0434\u0436\u0435\u043D\u043D\u044F",
+      "zh-cn": "\u9690\u85CF\u8C03\u8BD5\u901A\u77E5"
+    },
     type: "boolean",
     role: "switch",
     read: true,
