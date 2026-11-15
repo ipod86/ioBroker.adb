@@ -957,9 +957,14 @@ export class AndroidDevice {
 	 * @param on true = on
 	 */
 	async setDoNotDisturb(on: boolean): Promise<void> {
-		await this.run(`cmd notification set_dnd ${on ? 'on' : 'off'}`);
-		const z = await this.run('settings get global zen_mode');
-		await this.adapter.setState(this.infoId('doNotDisturb'), { val: z.trim() !== '0', ack: true });
+		const out = await this.run(`cmd notification set_dnd ${on ? 'on' : 'off'}`);
+		if (/error|exception|unknown/i.test(out)) {
+			throw new Error(out);
+		}
+		this.adapter.log.info(`${this.label}: do not disturb ${on ? 'on' : 'off'}`);
+		// Android applies the change with a short delay, so confirm the requested value
+		// and let the next reading of the info values correct it if needed
+		await this.adapter.setState(this.infoId('doNotDisturb'), { val: on, ack: true });
 	}
 
 	/**
