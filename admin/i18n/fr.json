@@ -20,6 +20,7 @@
 	"IP address": "Adresse IP",
 	"Name": "Nom",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Aucun appareil trouvé. Le débogage sans fil est-il activé et l'appareil est-il sur le même réseau ?",
+	"No device has scanned the QR code": "Aucun appareil n'a scanné le code QR",
 	"No device has scanned the QR code within 60 seconds": "Aucun appareil n'a scanné le code QR dans les 60 secondes",
 	"No supported automation app found on the device. Install one of: %s – then press the button again.": "Aucune application d'automatisation prise en charge trouvée sur l'appareil. Installez l'un des : %s – puis appuyez à nouveau sur le bouton.",
 	"On the device tap \"Pair device with pairing code\". Enter the IP address and the 6-digit code shown there. The port can stay empty while the dialog is open.": "Sur l'appareil, appuyez sur « Associer l'appareil avec le code d'appairage ». Saisissez l'adresse IP et le code à 6 chiffres qui y sont affichés. Le port peut rester vide pendant que la boîte de dialogue est ouverte.",
@@ -52,6 +53,5 @@
 	"adb server address": "adresse du serveur adb",
 	"adb server port": "port du serveur adb",
 	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "La version adb %s est trop ancienne pour le débogage sans fil (le couplage nécessite la version 30 ou une version ultérieure). Bookworm Debian 12 / Raspberry Pi OS : installez la version la plus récente à partir de bookworm-backports, consultez la documentation de l'adaptateur.",
-	"adb version %s – pairing supported": "version adb %s – couplage pris en charge",
-	"e.g. net.dinglisch.android.taskerm": "par ex. net.dinglisch.android.taskerm"
+	"adb version %s – pairing supported": "version adb %s – couplage pris en charge"
 }

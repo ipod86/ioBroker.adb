@@ -32,6 +32,8 @@ var import_device = require("./lib/device");
 var import_discovery = require("./lib/discovery");
 var import_util = require("./lib/util");
 const AUTOMATION_GRANTED = "%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi \u2192 system setting (global) adb_wifi_enabled = 1.";
+const ADB_MISSING = "The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb \u2013 then restart the adapter.";
+const ADB_TOO_OLD = "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.";
 const NO_AUTOMATION_APP = "No supported automation app found on the device. Install one of: %s \u2013 then press the button again.";
 class AdbAdapter extends utils.Adapter {
   client;
@@ -39,6 +41,8 @@ class AdbAdapter extends utils.Adapter {
   discovery;
   devices = [];
   timer;
+  interval = 3e4;
+  unloading = false;
   snoozeTimer;
   serverHost = "127.0.0.1";
   serverPort = 5037;
@@ -70,7 +74,10 @@ class AdbAdapter extends utils.Adapter {
     this.adbBin = bin;
     await this.checkAdbProgram();
     this.client = import_adbkit.Adb.createClient({ host: this.serverHost, port: this.serverPort, bin });
-    this.discovery = new import_discovery.Discovery(this.log);
+    this.discovery = new import_discovery.Discovery(this.log, {
+      setTimeout: (cb, ms) => this.setTimeout(cb, ms),
+      clearTimeout: (t) => this.clearTimeout(t)
+    });
     this.discovery.start();
     const { ok, problems } = (0, import_util.checkDevices)(this.config.devices);
     problems.forEach((p) => this.log.warn(p));
@@ -87,10 +94,15 @@ class AdbAdapter extends utils.Adapter {
     if (!this.devices.length) {
       this.log.info("No devices configured yet. Add them in the adapter settings.");
     }
-    await this.subscribeStatesAsync("*");
-    this.setTimeout(() => void this.tick(), 3e3);
-    const interval = Math.max(10, Number(this.config.reconnectInterval) || 30);
-    this.timer = this.setInterval(() => void this.tick(), interval * 1e3);
+    for (const dev of this.devices) {
+      for (const [name, common] of Object.entries({ ...import_device.DEVICE_STATES, ...import_device.WIRELESS_STATES })) {
+        if (common.write && (name in import_device.DEVICE_STATES || !dev.fixedPort)) {
+          await this.subscribeStatesAsync(dev.stateId(name));
+        }
+      }
+    }
+    this.interval = Math.min(3600, Math.max(10, Number(this.config.reconnectInterval) || 30)) * 1e3;
+    this.timer = this.setTimeout(() => void this.loop(), 3e3);
     this.snoozeTimer = this.setInterval(
       () => {
         for (const dev of this.devices) {
@@ -119,6 +131,17 @@ class AdbAdapter extends utils.Adapter {
       return id;
     }
     return void 0;
+  }
+  /** Runs tick() again and again; the next run starts only after the previous one has finished. */
+  async loop() {
+    try {
+      await this.tick();
+    } catch (e) {
+      this.log.warn(`Check of the connections failed: ${(0, import_device.errorText)(e)}`);
+    }
+    if (!this.unloading) {
+      this.timer = this.setTimeout(() => void this.loop(), this.interval);
+    }
   }
   /** Checks the adb server and reconnects devices */
   async tick() {
@@ -158,27 +181,25 @@ class AdbAdapter extends utils.Adapter {
       );
     });
     let problem = "";
+    let problemEn = "";
     if (output.err && (output.err.code === "ENOENT" || !output.out)) {
-      problem = this.t(
-        "The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb \u2013 then restart the adapter."
-      );
+      problemEn = ADB_MISSING;
+      problem = this.t(ADB_MISSING);
       this.adbCheck = `\u274C ${problem}`;
     } else {
       const v = (0, import_util.parseAdbVersion)(output.out);
       if (!v) {
         this.adbCheck = this.t("adb found, version unknown");
       } else if (v.major < import_util.ADB_MIN_PAIRING) {
-        problem = this.t(
-          "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.",
-          v.text
-        );
+        problemEn = ADB_TOO_OLD.replace("%s", v.text);
+        problem = this.t(ADB_TOO_OLD, v.text);
         this.adbCheck = `\u26A0\uFE0F ${problem}`;
       } else {
         this.adbCheck = `\u2705 ${this.t("adb version %s \u2013 pairing supported", v.text)}`;
       }
     }
     if (problem) {
-      this.log.warn(problem);
+      this.log.warn(problemEn);
       if (notify) {
         try {
           await this.registerNotification("adb", "adbProgram", problem);
@@ -200,6 +221,9 @@ class AdbAdapter extends utils.Adapter {
       tracker.on("end", () => {
         var _a;
         this.tracker = void 0;
+        if (this.unloading) {
+          return;
+        }
         this.serverOk = false;
         void this.setState("info.connection", false, true);
         this.log.warn("Connection to adb server lost, retrying");
@@ -246,18 +270,36 @@ class AdbAdapter extends utils.Adapter {
    * @param dev device
    */
   async createDeviceObjects(dev) {
-    var _a;
-    await this.extendObject(dev.objectId, {
-      type: "device",
-      common: { name: dev.name, statusStates: { onlineId: `${this.namespace}.${dev.stateId("connection")}` } },
-      native: { ip: dev.ip, port: (_a = dev.fixedPort) != null ? _a : null }
-    });
-    for (const [id, common] of Object.entries(import_device.DEVICE_STATES)) {
-      await this.extendObject(dev.stateId(id), { type: "state", common, native: {} });
+    var _a, _b;
+    const common = {
+      name: dev.name,
+      statusStates: { onlineId: `${this.namespace}.${dev.stateId("connection")}` }
+    };
+    const existing = await this.getObjectAsync(dev.objectId);
+    if (existing) {
+      const old = existing.common;
+      for (const key of ["type", "role", "read", "write"]) {
+        delete old[key];
+      }
+      await this.setObject(dev.objectId, {
+        ...existing,
+        type: "device",
+        common: { ...old, ...common },
+        native: { ...existing.native, ip: dev.ip, port: (_a = dev.fixedPort) != null ? _a : null }
+      });
+    } else {
+      await this.setObject(dev.objectId, {
+        type: "device",
+        common,
+        native: { ip: dev.ip, port: (_b = dev.fixedPort) != null ? _b : null }
+      });
+    }
+    for (const [id, common2] of Object.entries(import_device.DEVICE_STATES)) {
+      await this.extendObject(dev.stateId(id), { type: "state", common: common2, native: {} });
     }
     if (!dev.fixedPort) {
-      for (const [id, common] of Object.entries(import_device.WIRELESS_STATES)) {
-        await this.extendObject(dev.stateId(id), { type: "state", common, native: {} });
+      for (const [id, common2] of Object.entries(import_device.WIRELESS_STATES)) {
+        await this.extendObject(dev.stateId(id), { type: "state", common: common2, native: {} });
       }
     }
   }
@@ -285,9 +327,7 @@ class AdbAdapter extends utils.Adapter {
       return;
     }
     await dev.command(name, state.val);
-    if (import_device.DEVICE_STATES[name].role !== "button") {
-      await this.setState(id, state.val, true);
-    }
+    await this.setState(id, state.val, true);
   }
   /**
    * Answers requests from the settings page.
@@ -387,7 +427,7 @@ class AdbAdapter extends utils.Adapter {
       return;
     }
     if (!found) {
-      qr.done = { error: "No device has scanned the QR code" };
+      qr.done = { error: this.t("No device has scanned the QR code") };
     } else {
       this.log.info(`${found.ip} has scanned the QR code, pairing`);
       try {
@@ -602,9 +642,8 @@ class AdbAdapter extends utils.Adapter {
   async onUnload(callback) {
     var _a, _b;
     try {
-      if (this.timer) {
-        this.clearInterval(this.timer);
-      }
+      this.unloading = true;
+      this.clearTimeout(this.timer);
       if (this.snoozeTimer) {
         this.clearInterval(this.snoozeTimer);
       }

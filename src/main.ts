@@ -36,6 +36,10 @@ interface TrackedDevice {
 /** Answer texts (keys of admin/i18n) */
 const AUTOMATION_GRANTED =
 	'%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.';
+const ADB_MISSING =
+	'The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb – then restart the adapter.';
+const ADB_TOO_OLD =
+	'adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.';
 const NO_AUTOMATION_APP =
 	'No supported automation app found on the device. Install one of: %s – then press the button again.';
 
@@ -45,7 +49,9 @@ class AdbAdapter extends utils.Adapter {
 	private tracker?: Tracker;
 	private discovery?: Discovery;
 	private devices: AndroidDevice[] = [];
-	private timer?: ioBroker.Interval;
+	private timer?: ioBroker.Timeout;
+	private interval = 30000;
+	private unloading = false;
 	private snoozeTimer?: ioBroker.Interval;
 	private serverHost = '127.0.0.1';
 	private serverPort = 5037;
@@ -89,7 +95,10 @@ class AdbAdapter extends utils.Adapter {
 		await this.checkAdbProgram();
 
 		this.client = Adb.createClient({ host: this.serverHost, port: this.serverPort, bin });
-		this.discovery = new Discovery(this.log);
+		this.discovery = new Discovery(this.log, {
+			setTimeout: (cb, ms) => this.setTimeout(cb, ms),
+			clearTimeout: t => this.clearTimeout(t),
+		});
 		this.discovery.start();
 
 		const { ok, problems } = checkDevices(this.config.devices);
@@ -109,11 +118,17 @@ class AdbAdapter extends utils.Adapter {
 			this.log.info('No devices configured yet. Add them in the adapter settings.');
 		}
 
-		await this.subscribeStatesAsync('*');
+		// only the writable states of the devices are needed
+		for (const dev of this.devices) {
+			for (const [name, common] of Object.entries({ ...DEVICE_STATES, ...WIRELESS_STATES })) {
+				if (common.write && (name in DEVICE_STATES || !dev.fixedPort)) {
+					await this.subscribeStatesAsync(dev.stateId(name));
+				}
+			}
+		}
+		this.interval = Math.min(3600, Math.max(10, Number(this.config.reconnectInterval) || 30)) * 1000;
 		// give mDNS a moment to collect the announcements before the first connect
-		this.setTimeout(() => void this.tick(), 3000);
-		const interval = Math.max(10, Number(this.config.reconnectInterval) || 30);
-		this.timer = this.setInterval(() => void this.tick(), interval * 1000);
+		this.timer = this.setTimeout(() => void this.loop(), 3000);
 		// renew the snooze of the debugging notification now and then
 		this.snoozeTimer = this.setInterval(
 			() => {
@@ -144,6 +159,18 @@ class AdbAdapter extends utils.Adapter {
 			return id;
 		}
 		return undefined;
+	}
+
+	/** Runs tick() again and again; the next run starts only after the previous one has finished. */
+	private async loop(): Promise<void> {
+		try {
+			await this.tick();
+		} catch (e) {
+			this.log.warn(`Check of the connections failed: ${errorText(e)}`);
+		}
+		if (!this.unloading) {
+			this.timer = this.setTimeout(() => void this.loop(), this.interval);
+		}
 	}
 
 	/** Checks the adb server and reconnects devices */
@@ -183,27 +210,25 @@ class AdbAdapter extends utils.Adapter {
 			);
 		});
 		let problem = '';
+		let problemEn = '';
 		if (output.err && (output.err.code === 'ENOENT' || !output.out)) {
-			problem = this.t(
-				'The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb – then restart the adapter.',
-			);
+			problemEn = ADB_MISSING;
+			problem = this.t(ADB_MISSING);
 			this.adbCheck = `❌ ${problem}`;
 		} else {
 			const v = parseAdbVersion(output.out);
 			if (!v) {
 				this.adbCheck = this.t('adb found, version unknown');
 			} else if (v.major < ADB_MIN_PAIRING) {
-				problem = this.t(
-					'adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.',
-					v.text,
-				);
+				problemEn = ADB_TOO_OLD.replace('%s', v.text);
+				problem = this.t(ADB_TOO_OLD, v.text);
 				this.adbCheck = `⚠️ ${problem}`;
 			} else {
 				this.adbCheck = `✅ ${this.t('adb version %s – pairing supported', v.text)}`;
 			}
 		}
 		if (problem) {
-			this.log.warn(problem);
+			this.log.warn(problemEn);
 			if (notify) {
 				try {
 					await this.registerNotification('adb', 'adbProgram', problem);
@@ -226,6 +251,9 @@ class AdbAdapter extends utils.Adapter {
 			tracker.on('remove', (d: TrackedDevice) => void this.onTracker(d.id, undefined));
 			tracker.on('end', () => {
 				this.tracker = undefined;
+				if (this.unloading) {
+					return;
+				}
 				this.serverOk = false;
 				void this.setState('info.connection', false, true);
 				this.log.warn('Connection to adb server lost, retrying');
@@ -276,11 +304,30 @@ class AdbAdapter extends utils.Adapter {
 	 * @param dev device
 	 */
 	private async createDeviceObjects(dev: AndroidDevice): Promise<void> {
-		await this.extendObject(dev.objectId, {
-			type: 'device',
-			common: { name: dev.name, statusStates: { onlineId: `${this.namespace}.${dev.stateId('connection')}` } },
-			native: { ip: dev.ip, port: dev.fixedPort ?? null },
-		});
+		const common: ioBroker.DeviceCommon = {
+			name: dev.name,
+			statusStates: { onlineId: `${this.namespace}.${dev.stateId('connection')}` },
+		};
+		const existing = await this.getObjectAsync(dev.objectId);
+		if (existing) {
+			// version 0.0.x wrote state attributes (type, role, read, write) into the device object
+			const old = existing.common as Record<string, unknown>;
+			for (const key of ['type', 'role', 'read', 'write']) {
+				delete old[key];
+			}
+			await this.setObject(dev.objectId, {
+				...existing,
+				type: 'device',
+				common: { ...(old as unknown as ioBroker.DeviceCommon), ...common },
+				native: { ...existing.native, ip: dev.ip, port: dev.fixedPort ?? null },
+			});
+		} else {
+			await this.setObject(dev.objectId, {
+				type: 'device',
+				common,
+				native: { ip: dev.ip, port: dev.fixedPort ?? null },
+			});
+		}
 		for (const [id, common] of Object.entries(DEVICE_STATES)) {
 			await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
 		}
@@ -314,10 +361,8 @@ class AdbAdapter extends utils.Adapter {
 			return;
 		}
 		await dev.command(name, state.val);
-		// commands are acknowledged, buttons go back to their empty state
-		if (DEVICE_STATES[name].role !== 'button') {
-			await this.setState(id, state.val, true);
-		}
+		// confirm the command (buttons too, see the state roles)
+		await this.setState(id, state.val, true);
 	}
 
 	/**
@@ -424,7 +469,7 @@ class AdbAdapter extends utils.Adapter {
 			return;
 		}
 		if (!found) {
-			qr.done = { error: 'No device has scanned the QR code' };
+			qr.done = { error: this.t('No device has scanned the QR code') };
 		} else {
 			this.log.info(`${found.ip} has scanned the QR code, pairing`);
 			try {
@@ -653,9 +698,8 @@ class AdbAdapter extends utils.Adapter {
 	 */
 	private async onUnload(callback: () => void): Promise<void> {
 		try {
-			if (this.timer) {
-				this.clearInterval(this.timer);
-			}
+			this.unloading = true;
+			this.clearTimeout(this.timer);
 			if (this.snoozeTimer) {
 				this.clearInterval(this.snoozeTimer);
 			}

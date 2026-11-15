@@ -7,14 +7,14 @@
                 "en": "Add meta object for fix screenshot.",
                 "de": "Fügen Sie Meta-Objekt für Fix Screenshot hinzu",
                 "ru": "Добавлен meta-объект для исправдления скриншота.",
-                "pt": "Adicionar meta-objeto para corrigir a captura de tela",
+                "pt": "Adicionado meta-objeto para corrigir a captura de tela",
                 "nl": "Voeg meta-object toe",
                 "fr": "Ajouter meta-object pour fixer screenshot",
                 "it": "Aggiungi meta-oggetti per fissare screenshot",
                 "es": "Añadir meta-objeto para fijar captura de pantalla",
-                "pl": "Add metaobject for fix screenshot screenshot",
-                "uk": "Add meta object for fix screenshot.",
-                "zh-cn": "九. 包围屏幕的代用品"
+                "pl": "Dodano metaobiekt naprawiający zrzut ekranu",
+                "uk": "Додано мета-об'єкт для виправлення знімка екрана",
+                "zh-cn": "添加元对象以修复截图"
             },
             "0.0.6": {
                 "en": "Add delete and up/down buttons in device list.\nReplace dependency 'adbkit'. Active development has been moved to DeviceFarmer organisation.\nAdd wait for device after connection.",
@@ -25,9 +25,9 @@
                 "fr": "Ajouter les boutons de suppression et de retrait dans la liste des périphériques.\nReplacer l'adbkit de dépendance. Le développement actif a été déplacé à l'organisation DeviceFarmer.\nAjouter attendre l'appareil après la connexion.",
                 "it": "Aggiungi pulsanti delete and up/down nell'elenco dei dispositivi.\nSostituisci adbkit dipendenza. Lo sviluppo attivo è stato spostato all'organizzazione DeviceFarmer.\nAdd attendere il dispositivo dopo la connessione.",
                 "es": "Añadir botones de borrado y arriba / abajo en la lista de dispositivos.\nReemplazar adbkit dependencia. Desarrollo activo se ha movido a la organización DeviceFarmer.\nAdd espera para el dispositivo después de la conexión.",
-                "pl": "Add delete and up/down buttons in device list.\nReplace dependency adbkit. Prace nad programem zostały przeniesione do DeviceFarmer.\nAdd czekającego na urządzenie po połączeniu.",
-                "uk": "Add delete and up/down buttons in device list.\nReplace dependency 'adbkit'. Active development has been moved to DeviceFarmer organisation.\nAdd wait for device after connection.",
-                "zh-cn": "在装置清单中删除和降解/降水、排他性。 积极发展已转移到DeviceFarmer组织,然后再等待装置。."
+                "pl": "Dodano przyciski usuwania i przesuwania na liście urządzeń.\nZastąpiono zależność adbkit (rozwój przeniesiono do organizacji DeviceFarmer).\nDodano oczekiwanie na urządzenie po połączeniu.",
+                "uk": "Додано кнопки видалення та переміщення в списку пристроїв.\nЗамінено залежність adbkit (розробка перейшла до організації DeviceFarmer).\nДодано очікування пристрою після підключення.",
+                "zh-cn": "在设备列表中添加删除和上移/下移按钮。\n替换依赖项 adbkit（开发已转移到 DeviceFarmer 组织）。\n连接后等待设备就绪。"
             },
             "0.0.5": {
                 "en": "js-controller dependency upgraded to > 2.0.0",
@@ -39,20 +39,20 @@
                 "it": "dipendenza js-controller aggiornata a> 2.0.0",
                 "es": "Dependencia js-controller actualizada a> 2.0.0",
                 "pl": "Zależność kontrolera js zaktualizowana do> 2.0.0",
-                "uk": "js-controller dependency upgraded to > 2.0.0",
+                "uk": "Залежність js-controller оновлено до > 2.0.0",
                 "zh-cn": "js-controller依赖关系已升级到> 2.0.0"
             },
             "0.0.3": {
-                "en": "fixes ater review",
-                "de": "behebt nach Überprüfung",
+                "en": "fixes after review",
+                "de": "Korrekturen nach dem Review",
                 "ru": "исправления после обзора",
-                "pt": "fixes ater review",
-                "nl": "repareert ater review",
-                "fr": "correction de la révision ater",
+                "pt": "Correções após a revisão",
+                "nl": "Correcties na de review",
+                "fr": "Corrections après la revue",
                 "it": "correzioni dopo la revisione",
-                "es": "repara una revisión",
-                "pl": "naprawia przegląd ater",
-                "uk": "fixes ater review",
+                "es": "Correcciones tras la revisión",
+                "pl": "Poprawki po przeglądzie",
+                "uk": "Виправлення після перевірки",
                 "zh-cn": "修复审核"
             },
             "0.0.2": {
@@ -65,7 +65,7 @@
                 "it": "aggiungi comandi: avvia / interrompi applicazione, riavvia il dispositivo, fai screenshot",
                 "es": "agregar comandos: iniciar / detener la aplicación, reiniciar el dispositivo, tomar captura de pantalla",
                 "pl": "dodaj polecenia: uruchom / zatrzymaj aplikację, uruchom ponownie urządzenie, zrób zrzut ekranu",
-                "uk": "add commands: start/stopp application, reboot device, take screenshot",
+                "uk": "Додано команди: запуск/зупинка застосунку, перезавантаження пристрою, знімок екрана",
                 "zh-cn": "添加命令：启动/停止应用程序，重启设备，截图"
             },
             "0.0.1": {
@@ -78,7 +78,7 @@
                 "it": "Versione iniziale",
                 "es": "Versión inicial",
                 "pl": "Pierwsze wydanie",
-                "uk": "initial release",
+                "uk": "Перший випуск",
                 "zh-cn": "首次出版"
             }
         },
@@ -155,7 +155,7 @@
     },
     "native": {
         "adbHostOption": "127.0.0.1",
-        "adbPortOption": "5037",
+        "adbPortOption": 5037,
         "adbPath": "",
         "reconnectInterval": 30,
         "devices": []

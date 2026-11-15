@@ -35,6 +35,7 @@ describe('util', () => {
 		expect(deviceObjectId('192.168.99.76', 5555)).to.equal('192_168_99_76_5555');
 		expect(deviceObjectId('192.168.1.20')).to.equal('192_168_1_20');
 		expect(deviceObjectId('tv.local', 5555)).to.equal('tv_local_5555');
+		expect(deviceObjectId('TV.local', 5555)).to.equal('tv_local_5555');
 	});
 
 	it('legacyObjectId of version 0.0.x keeps the colon', () => {

@@ -29,9 +29,13 @@ class Discovery {
    * @param log logger
    * @param log.debug debug output
    * @param log.warn warning output
+   * @param timers timers of the adapter (cleared automatically on unload)
+   * @param timers.setTimeout starts a timer
+   * @param timers.clearTimeout stops a timer
    */
-  constructor(log) {
+  constructor(log, timers) {
     this.log = log;
+    this.timers = timers;
   }
   bonjour;
   browsers = [];
@@ -127,15 +131,14 @@ class Discovery {
       return Promise.resolve(existing);
     }
     return new Promise((resolve) => {
-      let timer = void 0;
       const waiter = {
         match,
         resolve: (s) => {
-          clearTimeout(timer);
+          this.timers.clearTimeout(waiter.timer);
           resolve(s);
         }
       };
-      timer = setTimeout(() => {
+      waiter.timer = this.timers.setTimeout(() => {
         this.waiters = this.waiters.filter((w) => w !== waiter);
         resolve(void 0);
       }, timeoutMs);
@@ -169,7 +172,7 @@ class Discovery {
     }
     this.browsers = [];
     for (const w of this.waiters) {
-      w.resolve = () => void 0;
+      this.timers.clearTimeout(w.timer);
     }
     this.waiters = [];
     try {

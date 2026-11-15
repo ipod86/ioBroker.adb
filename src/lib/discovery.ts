@@ -23,14 +23,27 @@ export class Discovery {
 	private browsers: Browser[] = [];
 	private connect = new Map<string, FoundService>();
 	private pairing = new Map<string, FoundService>();
-	private waiters: { match: (s: FoundService) => boolean; resolve: (s: FoundService) => void }[] = [];
+	private waiters: {
+		match: (s: FoundService) => boolean;
+		resolve: (s: FoundService) => void;
+		timer?: ioBroker.Timeout;
+	}[] = [];
 
 	/**
 	 * @param log logger
 	 * @param log.debug debug output
 	 * @param log.warn warning output
+	 * @param timers timers of the adapter (cleared automatically on unload)
+	 * @param timers.setTimeout starts a timer
+	 * @param timers.clearTimeout stops a timer
 	 */
-	constructor(private readonly log: { debug: (m: string) => void; warn: (m: string) => void }) {}
+	constructor(
+		private readonly log: { debug: (m: string) => void; warn: (m: string) => void },
+		private readonly timers: {
+			setTimeout(cb: () => void, ms: number): ioBroker.Timeout | undefined;
+			clearTimeout(t: ioBroker.Timeout | undefined): void;
+		},
+	) {}
 
 	/** Starts listening */
 	start(): void {
@@ -126,15 +139,14 @@ export class Discovery {
 			return Promise.resolve(existing);
 		}
 		return new Promise(resolve => {
-			let timer: NodeJS.Timeout | undefined = undefined;
-			const waiter = {
+			const waiter: (typeof this.waiters)[number] = {
 				match,
 				resolve: (s: FoundService): void => {
-					clearTimeout(timer);
+					this.timers.clearTimeout(waiter.timer);
 					resolve(s);
 				},
 			};
-			timer = setTimeout(() => {
+			waiter.timer = this.timers.setTimeout(() => {
 				this.waiters = this.waiters.filter(w => w !== waiter);
 				resolve(undefined);
 			}, timeoutMs);
@@ -170,7 +182,7 @@ export class Discovery {
 		}
 		this.browsers = [];
 		for (const w of this.waiters) {
-			w.resolve = () => undefined;
+			this.timers.clearTimeout(w.timer);
 		}
 		this.waiters = [];
 		try {

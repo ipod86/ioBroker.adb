@@ -42,7 +42,7 @@ const DEVICE_STATES = {
       "zh-cn": "\u5DF2\u8FDE\u63A5"
     },
     type: "boolean",
-    role: "indicator.connected",
+    role: "indicator.reachable",
     read: true,
     write: false,
     def: false
@@ -62,7 +62,7 @@ const DEVICE_STATES = {
       "zh-cn": "\u8FDE\u63A5\u72B6\u6001"
     },
     type: "string",
-    role: "text",
+    role: "info.status",
     read: true,
     write: false,
     def: ""
@@ -82,7 +82,7 @@ const DEVICE_STATES = {
       "zh-cn": "\u5F53\u524D\u7AEF\u53E3"
     },
     type: "number",
-    role: "value",
+    role: "info.port",
     read: true,
     write: false
   },
@@ -101,7 +101,7 @@ const DEVICE_STATES = {
       "zh-cn": "\u578B\u53F7"
     },
     type: "string",
-    role: "text",
+    role: "info.model",
     read: true,
     write: false
   },
@@ -120,7 +120,7 @@ const DEVICE_STATES = {
       "zh-cn": "Android \u7248\u672C"
     },
     type: "string",
-    role: "text",
+    role: "info.firmware",
     read: true,
     write: false
   },
@@ -279,7 +279,7 @@ const WIRELESS_STATES = {
       "zh-cn": "\u9690\u85CF\u8C03\u8BD5\u901A\u77E5"
     },
     type: "boolean",
-    role: "switch",
+    role: "switch.setting",
     read: true,
     write: true,
     def: false,
@@ -288,6 +288,7 @@ const WIRELESS_STATES = {
 };
 const SNOOZE_MS = 365 * 24 * 3600 * 1e3;
 const DEFAULT_NOTIFICATION_KEY = "-1|android|62|null|1000";
+const SHELL_MS = 12e4;
 const WAIT_MS = 1e4;
 class AndroidDevice {
   /**
@@ -375,10 +376,10 @@ class AndroidDevice {
       await this.client.disconnect(this.ip, (0, import_util.portOfSerial)(this.serial)).catch(() => void 0);
     }
     try {
-      await withTimeout(this.client.connect(this.ip, port), WAIT_MS, "connect timeout");
+      await this.withTimeout(this.client.connect(this.ip, port), WAIT_MS, "connect timeout");
       this.serial = serial;
       await this.host.setState(this.stateId("port"), { val: port, ack: true });
-      await withTimeout(this.device().waitForDevice(), WAIT_MS, "device did not answer");
+      await this.withTimeout(this.device().waitForDevice(), WAIT_MS, "device did not answer");
       await this.onConnected();
       return true;
     } catch (e) {
@@ -422,8 +423,8 @@ class AndroidDevice {
       await this.readInfo();
     }
     if (this.hideNotification) {
-      clearTimeout(this.notifyTimer);
-      this.notifyTimer = setTimeout(() => void this.applyNotification(), 3e3);
+      this.host.clearTimeout(this.notifyTimer);
+      this.notifyTimer = this.host.setTimeout(() => void this.applyNotification(), 3e3);
     }
   }
   /**
@@ -482,8 +483,7 @@ class AndroidDevice {
   /** Reads the installed apps once per connection, for the app selection in the settings. */
   async readApps() {
     try {
-      const out = await import_adbkit.Adb.util.readAll(await this.device().shell("pm list packages -3 --user 0"));
-      this.apps = (0, import_util.parsePackages)(out.toString()).sort();
+      this.apps = (0, import_util.parsePackages)(await this.readShell("pm list packages -3 --user 0")).sort();
     } catch (e) {
       this.host.log.debug(`${this.label}: could not read the app list: ${errorText(e)}`);
     }
@@ -586,8 +586,8 @@ class AndroidDevice {
     if (!command) {
       return;
     }
-    const out = await import_adbkit.Adb.util.readAll(await this.device().shell(command));
-    await this.setResult(out.toString().trim() || "ok");
+    const out = await this.readShell(command);
+    await this.setResult(out || "ok");
   }
   /**
    * Runs a shell command and returns its output, without writing "result".
@@ -598,8 +598,47 @@ class AndroidDevice {
     if (!await this.ensureConnected()) {
       throw new Error(this.lastStatus || "not connected");
     }
-    const out = await import_adbkit.Adb.util.readAll(await this.device().shell(command));
-    return out.toString().trim();
+    return this.readShell(command);
+  }
+  /**
+   * Runs a shell command with a time limit and returns its trimmed output.
+   *
+   * @param command shell command
+   */
+  async readShell(command) {
+    const stream = await this.device().shell(command);
+    try {
+      const out = await this.withTimeout(
+        import_adbkit.Adb.util.readAll(stream),
+        SHELL_MS,
+        "command did not finish within 2 minutes"
+      );
+      return out.toString().trim();
+    } finally {
+      stream.destroy();
+    }
+  }
+  /**
+   * Rejects if the promise does not settle in time.
+   *
+   * @param p promise
+   * @param ms time limit in ms
+   * @param msg error text
+   */
+  withTimeout(p, ms, msg) {
+    return new Promise((resolve, reject) => {
+      const t = this.host.setTimeout(() => reject(new Error(msg)), ms);
+      p.then(
+        (v) => {
+          this.host.clearTimeout(t);
+          resolve(v);
+        },
+        (e) => {
+          this.host.clearTimeout(t);
+          reject(e instanceof Error ? e : new Error(String(e)));
+        }
+      );
+    });
   }
   /** Takes a screenshot and stores it as file. */
   async screencap() {
@@ -627,26 +666,11 @@ class AndroidDevice {
   }
   /** Closes the connection */
   async close() {
-    clearTimeout(this.notifyTimer);
+    this.host.clearTimeout(this.notifyTimer);
     if (this.serial) {
       await this.client.disconnect(this.ip, (0, import_util.portOfSerial)(this.serial)).catch(() => void 0);
     }
   }
-}
-function withTimeout(p, ms, msg) {
-  return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(msg)), ms);
-    p.then(
-      (v) => {
-        clearTimeout(t);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(t);
-        reject(e instanceof Error ? e : new Error(String(e)));
-      }
-    );
-  });
 }
 function errorText(e) {
   return e instanceof Error ? e.message : String(e);

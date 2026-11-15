@@ -20,6 +20,7 @@
 	"IP address": "IP адреса",
 	"Name": "Ім'я",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Пристрій не знайдено. Чи ввімкнено бездротове налагодження, а пристрій у тій самій мережі?",
+	"No device has scanned the QR code": "Жоден пристрій не просканував QR-код",
 	"No device has scanned the QR code within 60 seconds": "Жоден пристрій не просканував QR-код протягом 60 секунд",
 	"No supported automation app found on the device. Install one of: %s – then press the button again.": "На пристрої не знайдено підтримуваної програми автоматизації. Установіть один із: %s – потім натисніть кнопку ще раз.",
 	"On the device tap \"Pair device with pairing code\". Enter the IP address and the 6-digit code shown there. The port can stay empty while the dialog is open.": "На пристрої натисніть «Створити пару з кодом з’єднання». Введіть IP-адресу та вказаний там 6-значний код. Порт може залишатися порожнім, поки діалогове вікно відкрито.",
@@ -52,6 +53,5 @@
 	"adb server address": "адреса сервера adb",
 	"adb server port": "порт сервера adb",
 	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb версія %s застара для бездротового налагодження (для сполучення потрібна версія 30 або новіша). Debian 12 / Raspberry Pi OS bookworm: установіть новішу версію з bookworm-backports, див. документацію адаптера.",
-	"adb version %s – pairing supported": "версія adb %s – підтримка пар",
-	"e.g. net.dinglisch.android.taskerm": "напр. net.dinglisch.android.taskerm"
+	"adb version %s – pairing supported": "версія adb %s – підтримка пар"
 }

@@ -44,7 +44,6 @@
 	"The device refused the permission, see the log": "The device refused the permission, see the log",
 	"App for reboot (optional)": "App for reboot (optional)",
 	"This is not a valid package name": "This is not a valid package name",
-	"e.g. net.dinglisch.android.taskerm": "e.g. net.dinglisch.android.taskerm",
 	"Hide debug notice": "Hide debug notice",
 	"Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device. In \"App for reboot\" choose the app from the apps found on the device, or leave \"Automatic\". Only for devices with automatic port.": "Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device. In \"App for reboot\" choose the app from the apps found on the device, or leave \"Automatic\". Only for devices with automatic port.",
 	"Automatic": "Automatic",
@@ -53,5 +52,6 @@
 	"adb found, version unknown": "adb found, version unknown",
 	"adb version %s – pairing supported": "adb version %s – pairing supported",
 	"Check of the adb program": "Check of the adb program",
-	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation."
+	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.",
+	"No device has scanned the QR code": "No device has scanned the QR code"
 }

@@ -44,7 +44,7 @@ function parsePort(port) {
   return Number.isInteger(n) && n > 0 && n < 65536 ? n : void 0;
 }
 function deviceObjectId(ip, port) {
-  const base = port ? `${ip.trim()}:${port}` : ip.trim();
+  const base = port ? `${ip.trim().toLowerCase()}:${port}` : ip.trim().toLowerCase();
   return base.replace(/[.:]/g, "_").replace(/[^A-Za-z0-9_-]/g, "_");
 }
 function hostOfSerial(serial) {

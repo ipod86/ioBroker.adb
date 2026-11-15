@@ -23,6 +23,7 @@ Steuert Android-Geräte – Handys, Tablets, TV-Boxen, Android TV – über die 
 ## Voraussetzungen
 
 - Das Programm `adb` auf dem ioBroker-Rechner (oder einem anderen Rechner mit adb-Server). Debian/Ubuntu: `sudo apt install adb`. **Zum Koppeln ist adb ab Version 30 nötig** (`adb version`).
+- Node.js ab 22, js-controller ab 6.0.11, Admin ab 7.6.20 (Koppeln per QR-Code: Admin ab 8.3).
 - Läuft der adb-Server auf demselben Rechner, startet der Adapter ihn selbst. Beim Start prüft er das Programm adb: Fehlt es oder ist es älter als Version 30, erscheint im Admin eine Meldung mit dem Befehl zum Installieren; der Reiter **adb-Server** zeigt das Ergebnis der Prüfung.
 - Für kabelloses Debugging muss das Gerät im selben Netzwerk wie der adb-Server sein (nicht in einem getrennten Gast-WLAN oder VLAN), weil Koppeln und Port-Suche über mDNS laufen.
 - Koppeln per QR-Code braucht einen aktuellen Admin (ab 8.3). Koppeln per Code geht mit jedem Admin.

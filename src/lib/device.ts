@@ -30,7 +30,7 @@ export const DEVICE_STATES: Record<string, ioBroker.StateCommon> = {
 			'zh-cn': '已连接',
 		},
 		type: 'boolean',
-		role: 'indicator.connected',
+		role: 'indicator.reachable',
 		read: true,
 		write: false,
 		def: false,
@@ -50,7 +50,7 @@ export const DEVICE_STATES: Record<string, ioBroker.StateCommon> = {
 			'zh-cn': '连接状态',
 		},
 		type: 'string',
-		role: 'text',
+		role: 'info.status',
 		read: true,
 		write: false,
 		def: '',
@@ -70,7 +70,7 @@ export const DEVICE_STATES: Record<string, ioBroker.StateCommon> = {
 			'zh-cn': '当前端口',
 		},
 		type: 'number',
-		role: 'value',
+		role: 'info.port',
 		read: true,
 		write: false,
 	},
@@ -89,7 +89,7 @@ export const DEVICE_STATES: Record<string, ioBroker.StateCommon> = {
 			'zh-cn': '型号',
 		},
 		type: 'string',
-		role: 'text',
+		role: 'info.model',
 		read: true,
 		write: false,
 	},
@@ -108,7 +108,7 @@ export const DEVICE_STATES: Record<string, ioBroker.StateCommon> = {
 			'zh-cn': 'Android 版本',
 		},
 		type: 'string',
-		role: 'text',
+		role: 'info.firmware',
 		read: true,
 		write: false,
 	},
@@ -269,7 +269,7 @@ export const WIRELESS_STATES: Record<string, ioBroker.StateCommon> = {
 			'zh-cn': '隐藏调试通知',
 		},
 		type: 'boolean',
-		role: 'switch',
+		role: 'switch.setting',
 		read: true,
 		write: true,
 		def: false,
@@ -288,7 +288,12 @@ export interface DeviceHost {
 	log: ioBroker.Logger;
 	setState(id: string, state: ioBroker.SettableState): Promise<unknown>;
 	writeFileAsync(adapter: string, file: string, data: Buffer): Promise<void>;
+	setTimeout(cb: () => void, ms: number): ioBroker.Timeout | undefined;
+	clearTimeout(timer: ioBroker.Timeout | undefined): void;
 }
+
+/** Time limit for shell commands, so a command that never ends (e.g. logcat) does not hang */
+const SHELL_MS = 120000;
 
 /** Connection timeout for a single connect attempt */
 const WAIT_MS = 10000;
@@ -311,7 +316,7 @@ export class AndroidDevice {
 	hideNotification = false;
 	/** Apps installed on the device (read when connected) */
 	apps: string[] = [];
-	private notifyTimer?: NodeJS.Timeout;
+	private notifyTimer?: ioBroker.Timeout;
 
 	/**
 	 * @param host adapter
@@ -390,10 +395,10 @@ export class AndroidDevice {
 			await this.client.disconnect(this.ip, portOfSerial(this.serial)).catch(() => undefined);
 		}
 		try {
-			await withTimeout(this.client.connect(this.ip, port), WAIT_MS, 'connect timeout');
+			await this.withTimeout(this.client.connect(this.ip, port), WAIT_MS, 'connect timeout');
 			this.serial = serial;
 			await this.host.setState(this.stateId('port'), { val: port, ack: true });
-			await withTimeout(this.device().waitForDevice(), WAIT_MS, 'device did not answer');
+			await this.withTimeout(this.device().waitForDevice(), WAIT_MS, 'device did not answer');
 			await this.onConnected();
 			return true;
 		} catch (e) {
@@ -442,8 +447,8 @@ export class AndroidDevice {
 		}
 		if (this.hideNotification) {
 			// Android posts the notification right after the connection
-			clearTimeout(this.notifyTimer);
-			this.notifyTimer = setTimeout(() => void this.applyNotification(), 3000);
+			this.host.clearTimeout(this.notifyTimer);
+			this.notifyTimer = this.host.setTimeout(() => void this.applyNotification(), 3000);
 		}
 	}
 
@@ -507,8 +512,7 @@ export class AndroidDevice {
 	/** Reads the installed apps once per connection, for the app selection in the settings. */
 	async readApps(): Promise<void> {
 		try {
-			const out = await Adb.util.readAll(await this.device().shell('pm list packages -3 --user 0'));
-			this.apps = parsePackages(out.toString()).sort();
+			this.apps = parsePackages(await this.readShell('pm list packages -3 --user 0')).sort();
 		} catch (e) {
 			this.host.log.debug(`${this.label}: could not read the app list: ${errorText(e)}`);
 		}
@@ -618,8 +622,8 @@ export class AndroidDevice {
 		if (!command) {
 			return;
 		}
-		const out = await Adb.util.readAll(await this.device().shell(command));
-		await this.setResult(out.toString().trim() || 'ok');
+		const out = await this.readShell(command);
+		await this.setResult(out || 'ok');
 	}
 
 	/**
@@ -631,8 +635,49 @@ export class AndroidDevice {
 		if (!(await this.ensureConnected())) {
 			throw new Error(this.lastStatus || 'not connected');
 		}
-		const out = await Adb.util.readAll(await this.device().shell(command));
-		return out.toString().trim();
+		return this.readShell(command);
+	}
+
+	/**
+	 * Runs a shell command with a time limit and returns its trimmed output.
+	 *
+	 * @param command shell command
+	 */
+	private async readShell(command: string): Promise<string> {
+		const stream = await this.device().shell(command);
+		try {
+			const out = await this.withTimeout(
+				Adb.util.readAll(stream),
+				SHELL_MS,
+				'command did not finish within 2 minutes',
+			);
+			return out.toString().trim();
+		} finally {
+			stream.destroy();
+		}
+	}
+
+	/**
+	 * Rejects if the promise does not settle in time.
+	 *
+	 * @param p promise
+	 * @param ms time limit in ms
+	 * @param msg error text
+	 */
+	private withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
+		return new Promise((resolve, reject) => {
+			const t = this.host.setTimeout(() => reject(new Error(msg)), ms);
+			p.then(
+				v => {
+					this.host.clearTimeout(t);
+					resolve(v);
+				},
+				(e: unknown) => {
+					this.host.clearTimeout(t);
+					reject(e instanceof Error ? e : new Error(String(e)));
+				},
+			);
+		});
 	}
 
 	/** Takes a screenshot and stores it as file. */
@@ -665,34 +710,11 @@ export class AndroidDevice {
 
 	/** Closes the connection */
 	async close(): Promise<void> {
-		clearTimeout(this.notifyTimer);
+		this.host.clearTimeout(this.notifyTimer);
 		if (this.serial) {
 			await this.client.disconnect(this.ip, portOfSerial(this.serial)).catch(() => undefined);
 		}
 	}
-}
-
-/**
- * Rejects if the promise does not settle in time.
- *
- * @param p promise
- * @param ms time limit in ms
- * @param msg error text
- */
-function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
-	return new Promise((resolve, reject) => {
-		const t = setTimeout(() => reject(new Error(msg)), ms);
-		p.then(
-			v => {
-				clearTimeout(t);
-				resolve(v);
-			},
-			(e: unknown) => {
-				clearTimeout(t);
-				reject(e instanceof Error ? e : new Error(String(e)));
-			},
-		);
-	});
 }
 
 /**

@@ -20,6 +20,7 @@
 	"IP address": "IP地址",
 	"Name": "姓名",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "未找到设备。无线调试是否已开启且设备是否在同一网络中？",
+	"No device has scanned the QR code": "没有设备扫描过该二维码",
 	"No device has scanned the QR code within 60 seconds": "60秒内没有设备扫描过该二维码",
 	"No supported automation app found on the device. Install one of: %s – then press the button again.": "设备上找不到受支持的自动化应用程序。安装以下之一：%s – 然后再次按下按钮。",
 	"On the device tap \"Pair device with pairing code\". Enter the IP address and the 6-digit code shown there. The port can stay empty while the dialog is open.": "在设备上点击“使用配对代码配对设备”。输入 IP 地址和此处显示的 6 位代码。当对话框打开时，端口可以保持为空。",
@@ -52,6 +53,5 @@
 	"adb server address": "亚行服务器地址",
 	"adb server port": "亚行服务器端口",
 	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb 版本 %s 太旧，无法进行无线调试（配对需要版本 30 或更高版本）。 Debian 12 / Raspberry Pi OS bookworm：从 bookworm-b​​ackports 安装更新版本，请参阅适配器文档。",
-	"adb version %s – pairing supported": "adb 版本 %s – 支持配对",
-	"e.g. net.dinglisch.android.taskerm": "例如net.dinglisch.android.taskerm"
+	"adb version %s – pairing supported": "adb 版本 %s – 支持配对"
 }

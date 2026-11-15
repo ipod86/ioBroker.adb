@@ -34,7 +34,8 @@ export function parsePort(port: string | number | undefined | null): number | un
  * @param port fixed port, if any
  */
 export function deviceObjectId(ip: string, port?: number): string {
-	const base = port ? `${ip.trim()}:${port}` : ip.trim();
+	// host names are not case-sensitive
+	const base = port ? `${ip.trim().toLowerCase()}:${port}` : ip.trim().toLowerCase();
 	return base.replace(/[.:]/g, '_').replace(/[^A-Za-z0-9_-]/g, '_');
 }
 
