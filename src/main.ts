@@ -34,6 +34,10 @@ interface TrackedDevice {
 }
 
 /** Answer texts (keys of admin/i18n) */
+const FOUND = 'Found in the network:\n%s';
+const NONE_FOUND = 'No device found. Is wireless debugging switched on and the device in the same network?';
+const PAIRED = 'Paired with %s. The device will be connected within a few seconds.';
+const PAIRED_ADDED = 'Paired with %s and added to the device list. Please save the settings.';
 const AUTOMATION_GRANTED =
 	'%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.';
 const ADB_MISSING =
@@ -457,10 +461,10 @@ class AdbAdapter extends utils.Adapter {
 		const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
 		const code = normalizePairingCode(msg.code as string);
 		if (!ip) {
-			return { error: 'Enter the IP address of the device' };
+			return { error: this.t('Enter the IP address of the device') };
 		}
 		if (!isValidPairingCode(code)) {
-			return { error: 'The pairing code has 6 digits' };
+			return { error: this.t('The pairing code has 6 digits') };
 		}
 		let port = parsePort(msg.port as string);
 		if (!port) {
@@ -469,7 +473,9 @@ class AdbAdapter extends utils.Adapter {
 		}
 		if (!port) {
 			return {
-				error: 'Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.',
+				error: this.t(
+					'Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.',
+				),
 			};
 		}
 		await this.pair(ip, port, code);
@@ -546,7 +552,7 @@ class AdbAdapter extends utils.Adapter {
 	private async pairWithQr(): Promise<Record<string, unknown>> {
 		const qr = this.qr;
 		if (!qr) {
-			return { error: 'Show the QR code first' };
+			return { error: this.t('Show the QR code first') };
 		}
 		const result =
 			qr.done ??
@@ -558,7 +564,7 @@ class AdbAdapter extends utils.Adapter {
 				};
 				timer = this.setTimeout(() => {
 					qr.listeners = qr.listeners.filter(l => l !== listener);
-					resolve({ error: 'No device has scanned the QR code within 60 seconds' });
+					resolve({ error: this.t('No device has scanned the QR code within 60 seconds') });
 				}, 60_000);
 				qr.listeners.push(listener);
 			}));
@@ -566,7 +572,7 @@ class AdbAdapter extends utils.Adapter {
 			return { error: result.error };
 		}
 		// the device was added to the saved configuration: reload the page to show it
-		return { result: 'pairedAdded', args: [result.ip], reloadBrowser: true };
+		return { result: this.t(PAIRED_ADDED, result.ip), reloadBrowser: true };
 	}
 
 	/**
@@ -598,13 +604,12 @@ class AdbAdapter extends utils.Adapter {
 			: [...(this.config.devices ?? [])];
 		const known = devices.some(d => String(d.ip).trim() === ip);
 		if (known) {
-			return { result: 'paired', args: [ip] };
+			return { result: this.t(PAIRED, ip) };
 		}
 		const found = this.discovery!.devices().find(s => s.ip === ip);
 		const name = found?.name.replace(/^adb-/, '').replace(/-[^-]+$/, '') || ip;
 		return {
-			result: 'pairedAdded',
-			args: [ip],
+			result: this.t(PAIRED_ADDED, ip),
 			native: { devices: [...devices, { enabled: true, name, ip, port: '' }] },
 		};
 	}
@@ -676,14 +681,14 @@ class AdbAdapter extends utils.Adapter {
 		const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
 		const dev = this.devices.find(d => d.ip === ip);
 		if (!dev) {
-			return { error: 'Save the settings first, then try again' };
+			return { error: this.t('Save the settings first, then try again') };
 		}
 		const app = typeof msg.app === 'string' ? msg.app.trim() : '';
 		const chosen = app === 'auto' ? '' : app;
 		let apps: string[];
 		if (chosen) {
 			if (!isPackageName(chosen)) {
-				return { error: 'This is not a valid package name' };
+				return { error: this.t('This is not a valid package name') };
 			}
 			apps = [chosen];
 		} else {
@@ -703,7 +708,7 @@ class AdbAdapter extends utils.Adapter {
 			}
 		}
 		if (!done.length) {
-			return { error: 'The device refused the permission, see the log' };
+			return { error: this.t('The device refused the permission, see the log') };
 		}
 		this.log.info(`${dev.label}: ${done.join(', ')} may now switch wireless debugging on`);
 		return { result: this.t(AUTOMATION_GRANTED, done.join(', ')) };
@@ -719,12 +724,9 @@ class AdbAdapter extends utils.Adapter {
 		await this.delay(3000);
 		const list = this.discovery!.devices();
 		if (!list.length) {
-			return { result: 'noneFound' };
+			return { result: this.t(NONE_FOUND) };
 		}
-		return {
-			result: 'found',
-			args: [list.map(s => `${s.ip} (port ${s.port}, ${s.name})`).join('\n')],
-		};
+		return { result: this.t(FOUND, list.map(s => `${s.ip} (port ${s.port}, ${s.name})`).join('\n')) };
 	}
 
 	/**

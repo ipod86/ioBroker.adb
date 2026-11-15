@@ -31,6 +31,10 @@ var import_adbHost = require("./lib/adbHost");
 var import_device = require("./lib/device");
 var import_discovery = require("./lib/discovery");
 var import_util = require("./lib/util");
+const FOUND = "Found in the network:\n%s";
+const NONE_FOUND = "No device found. Is wireless debugging switched on and the device in the same network?";
+const PAIRED = "Paired with %s. The device will be connected within a few seconds.";
+const PAIRED_ADDED = "Paired with %s and added to the device list. Please save the settings.";
 const AUTOMATION_GRANTED = "%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi \u2192 system setting (global) adb_wifi_enabled = 1.";
 const ADB_MISSING = "The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb \u2013 then restart the adapter.";
 const ADB_TOO_OLD = "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.";
@@ -417,10 +421,10 @@ class AdbAdapter extends utils.Adapter {
     const ip = typeof msg.ip === "string" ? msg.ip.trim() : "";
     const code = (0, import_util.normalizePairingCode)(msg.code);
     if (!ip) {
-      return { error: "Enter the IP address of the device" };
+      return { error: this.t("Enter the IP address of the device") };
     }
     if (!(0, import_util.isValidPairingCode)(code)) {
-      return { error: "The pairing code has 6 digits" };
+      return { error: this.t("The pairing code has 6 digits") };
     }
     let port = (0, import_util.parsePort)(msg.port);
     if (!port) {
@@ -429,7 +433,9 @@ class AdbAdapter extends utils.Adapter {
     }
     if (!port) {
       return {
-        error: "Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there."
+        error: this.t(
+          "Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there."
+        )
       };
     }
     await this.pair(ip, port, code);
@@ -502,7 +508,7 @@ class AdbAdapter extends utils.Adapter {
     var _a;
     const qr = this.qr;
     if (!qr) {
-      return { error: "Show the QR code first" };
+      return { error: this.t("Show the QR code first") };
     }
     const result = (_a = qr.done) != null ? _a : await new Promise((resolve) => {
       let timer = void 0;
@@ -512,14 +518,14 @@ class AdbAdapter extends utils.Adapter {
       };
       timer = this.setTimeout(() => {
         qr.listeners = qr.listeners.filter((l) => l !== listener);
-        resolve({ error: "No device has scanned the QR code within 60 seconds" });
+        resolve({ error: this.t("No device has scanned the QR code within 60 seconds") });
       }, 6e4);
       qr.listeners.push(listener);
     });
     if (!result.ip) {
       return { error: result.error };
     }
-    return { result: "pairedAdded", args: [result.ip], reloadBrowser: true };
+    return { result: this.t(PAIRED_ADDED, result.ip), reloadBrowser: true };
   }
   /**
    * Sends the pairing request to the adb server.
@@ -547,13 +553,12 @@ class AdbAdapter extends utils.Adapter {
     const devices = Array.isArray(formDevices) ? formDevices : [...(_a = this.config.devices) != null ? _a : []];
     const known = devices.some((d) => String(d.ip).trim() === ip);
     if (known) {
-      return { result: "paired", args: [ip] };
+      return { result: this.t(PAIRED, ip) };
     }
     const found = this.discovery.devices().find((s) => s.ip === ip);
     const name = (found == null ? void 0 : found.name.replace(/^adb-/, "").replace(/-[^-]+$/, "")) || ip;
     return {
-      result: "pairedAdded",
-      args: [ip],
+      result: this.t(PAIRED_ADDED, ip),
       native: { devices: [...devices, { enabled: true, name, ip, port: "" }] }
     };
   }
@@ -621,14 +626,14 @@ class AdbAdapter extends utils.Adapter {
     const ip = typeof msg.ip === "string" ? msg.ip.trim() : "";
     const dev = this.devices.find((d) => d.ip === ip);
     if (!dev) {
-      return { error: "Save the settings first, then try again" };
+      return { error: this.t("Save the settings first, then try again") };
     }
     const app = typeof msg.app === "string" ? msg.app.trim() : "";
     const chosen = app === "auto" ? "" : app;
     let apps;
     if (chosen) {
       if (!(0, import_util.isPackageName)(chosen)) {
-        return { error: "This is not a valid package name" };
+        return { error: this.t("This is not a valid package name") };
       }
       apps = [chosen];
     } else {
@@ -648,7 +653,7 @@ class AdbAdapter extends utils.Adapter {
       }
     }
     if (!done.length) {
-      return { error: "The device refused the permission, see the log" };
+      return { error: this.t("The device refused the permission, see the log") };
     }
     this.log.info(`${dev.label}: ${done.join(", ")} may now switch wireless debugging on`);
     return { result: this.t(AUTOMATION_GRANTED, done.join(", ")) };
@@ -663,12 +668,9 @@ class AdbAdapter extends utils.Adapter {
     await this.delay(3e3);
     const list = this.discovery.devices();
     if (!list.length) {
-      return { result: "noneFound" };
+      return { result: this.t(NONE_FOUND) };
     }
-    return {
-      result: "found",
-      args: [list.map((s) => `${s.ip} (port ${s.port}, ${s.name})`).join("\n")]
-    };
+    return { result: this.t(FOUND, list.map((s) => `${s.ip} (port ${s.port}, ${s.name})`).join("\n")) };
   }
   /**
    * Stops everything.

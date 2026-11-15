@@ -128,11 +128,7 @@
 					"sm": 12,
 					"md": 8,
 					"lg": 6,
-					"xl": 6,
-					"result": {
-						"found": "Found in the network:\n%s",
-						"noneFound": "No device found. Is wireless debugging switched on and the device in the same network?"
-					}
+					"xl": 6
 				}
 			}
 		},
@@ -210,11 +206,7 @@
 					"sm": 6,
 					"md": 2,
 					"lg": 2,
-					"xl": 2,
-					"result": {
-						"paired": "Paired with %s. The device will be connected within a few seconds.",
-						"pairedAdded": "Paired with %s and added to the device list. Please save the settings."
-					}
+					"xl": 2
 				},
 				"hdrQr": {
 					"type": "header",
@@ -256,10 +248,6 @@
 					"md": 4,
 					"lg": 3,
 					"xl": 3,
-					"result": {
-						"paired": "Paired with %s. The device will be connected within a few seconds.",
-						"pairedAdded": "Paired with %s and added to the device list. Please save the settings."
-					},
 					"reloadBrowser": true
 				}
 			}
