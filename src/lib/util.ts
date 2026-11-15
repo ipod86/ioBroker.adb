@@ -214,3 +214,13 @@ export function parseAdbVersion(output: string): { text: string; major: number }
 
 /** adb version needed for pairing (wireless debugging, Android 11+) */
 export const ADB_MIN_PAIRING = 30;
+
+/**
+ * Object id of a device in version 0.0.x: only the dots were replaced, so the colon stayed (`192_168_1_5:5555`).
+ *
+ * @param ip IP address or host name
+ * @param port port
+ */
+export function legacyObjectId(ip: string, port: number): string {
+	return `${ip.trim()}:${port}`.replace(/\./g, '_');
+}

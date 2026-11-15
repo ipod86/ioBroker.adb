@@ -139,15 +139,16 @@ class AndroidDevice {
    * @param client adb client
    * @param discovery mDNS discovery
    * @param cfg device configuration
+   * @param objectId object id to use instead of the default (devices of version 0.0.x)
    */
-  constructor(host, client, discovery, cfg) {
+  constructor(host, client, discovery, cfg, objectId) {
     this.host = host;
     this.client = client;
     this.discovery = discovery;
     this.ip = cfg.ip;
     this.name = cfg.name || cfg.ip;
     this.fixedPort = (0, import_util.parsePort)(cfg.port);
-    this.objectId = (0, import_util.deviceObjectId)(this.ip, this.fixedPort);
+    this.objectId = objectId != null ? objectId : (0, import_util.deviceObjectId)(this.ip, this.fixedPort);
   }
   ip;
   name;

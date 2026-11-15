@@ -111,7 +111,7 @@ When connecting the first time, the device asks to **allow USB debugging** for t
 
 ## States
 
-For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port.
+For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port (dots replaced by `_`). Devices set up with version 0.0.x keep their old id `adb.0.<ip>:<port>`.
 
 | State | Description |
 |---|---|
@@ -132,7 +132,7 @@ Screenshots are saved as files of the adapter: `/adb.0/<device id>.png` and, as 
 
 ## Updating from 0.0.x
 
-Devices with a port keep their states and ids. The old settings are taken over. New are the states `status`, `port`, `model`, `androidVersion`, `keyevent` and – for wireless devices – `hideNotification`.
+Devices with a port keep their states and ids (`adb.0.<ip>:<port>`, with colon as before). The old settings are taken over. New are the states `status`, `port`, `model`, `androidVersion`, `keyevent` and – for wireless devices – `hideNotification`.
 
 ## More information
 

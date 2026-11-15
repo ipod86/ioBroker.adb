@@ -18,6 +18,7 @@ import {
 	pairSucceeded,
 	parsePort,
 	parsePackages,
+	legacyObjectId,
 	parseAdbVersion,
 	ADB_MIN_PAIRING,
 	isPackageName,
@@ -94,7 +95,7 @@ class AdbAdapter extends utils.Adapter {
 		const { ok, problems } = checkDevices(this.config.devices);
 		problems.forEach(p => this.log.warn(p));
 		for (const cfg of ok) {
-			const dev = new AndroidDevice(this, this.client, this.discovery, cfg);
+			const dev = new AndroidDevice(this, this.client, this.discovery, cfg, await this.legacyId(cfg));
 			await this.createDeviceObjects(dev);
 			await this.setState(dev.stateId('connection'), false, true);
 			if (!dev.fixedPort) {
@@ -124,6 +125,25 @@ class AdbAdapter extends utils.Adapter {
 			},
 			6 * 3600 * 1000,
 		);
+	}
+
+	/**
+	 * Devices created by version 0.0.x keep their object id (with colon), so scripts and visualisations keep working.
+	 *
+	 * @param cfg device configuration
+	 */
+	private async legacyId(cfg: DeviceConfig): Promise<string | undefined> {
+		const port = parsePort(cfg.port);
+		if (!port) {
+			return undefined;
+		}
+		const id = legacyObjectId(cfg.ip, port);
+		const obj = await this.getObjectAsync(id);
+		if (obj?.type === 'device') {
+			this.log.debug(`${cfg.ip}:${port} keeps the object id ${id} of version 0.0.x`);
+			return id;
+		}
+		return undefined;
 	}
 
 	/** Checks the adb server and reconnects devices */

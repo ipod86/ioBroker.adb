@@ -27,6 +27,7 @@ __export(util_exports, {
   hostOfSerial: () => hostOfSerial,
   isPackageName: () => isPackageName,
   isValidPairingCode: () => isValidPairingCode,
+  legacyObjectId: () => legacyObjectId,
   normalizePairingCode: () => normalizePairingCode,
   pairSucceeded: () => pairSucceeded,
   pairingQrText: () => pairingQrText,
@@ -126,6 +127,9 @@ function parseAdbVersion(output) {
   return m ? { text: m[1], major: parseInt(m[2], 10) } : void 0;
 }
 const ADB_MIN_PAIRING = 30;
+function legacyObjectId(ip, port) {
+  return `${ip.trim()}:${port}`.replace(/\./g, "_");
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ADB_MIN_PAIRING,
@@ -137,6 +141,7 @@ const ADB_MIN_PAIRING = 30;
   hostOfSerial,
   isPackageName,
   isValidPairingCode,
+  legacyObjectId,
   normalizePairingCode,
   pairSucceeded,
   pairingQrText,

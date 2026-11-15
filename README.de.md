@@ -102,7 +102,7 @@ Beim ersten Verbinden fragt das Gerät, ob **USB-Debugging** für diesen Rechner
 
 ## Datenpunkte
 
-Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei festem Port, `adb.0.<ip>` bei automatischem Port.
+Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei festem Port, `adb.0.<ip>` bei automatischem Port (Punkte durch `_` ersetzt). Mit Version 0.0.x eingerichtete Geräte behalten ihre alte ID `adb.0.<ip>:<port>`.
 
 | Datenpunkt | Bedeutung |
 |---|---|
@@ -123,7 +123,7 @@ Bildschirmfotos werden als Dateien des Adapters gespeichert: `/adb.0/<Geräte-ID
 
 ## Update von 0.0.x
 
-Geräte mit Port behalten ihre Datenpunkte und IDs. Die bisherigen Einstellungen werden übernommen. Neu sind die Datenpunkte `status`, `port`, `model`, `androidVersion`, `keyevent` und – bei kabellosen Geräten – `hideNotification`.
+Geräte mit Port behalten ihre Datenpunkte und IDs (`adb.0.<ip>:<port>`, wie bisher mit Doppelpunkt). Die bisherigen Einstellungen werden übernommen. Neu sind die Datenpunkte `status`, `port`, `model`, `androidVersion`, `keyevent` und – bei kabellosen Geräten – `hideNotification`.
 
 ## Changelog
 
