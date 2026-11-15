@@ -18,7 +18,7 @@ Steuert Android-Geräte – Handys, Tablets, TV-Boxen, Android TV – über die 
 - **Automatisches Wiederverbinden**, wenn ein Gerät aus, im Ruhezustand oder nicht im Netz war.
 - **Befehle:** Shell-Befehl mit Antwort, Taste senden, Apps starten und beenden, Neustart, Bildschirmfoto.
 - **Geräte-Infos:** Modell, Android-Version, aktueller Port, verständlicher Verbindungsstatus – und solange verbunden Akku, Laden, Bildschirm an, App im Vordergrund, WLAN-Signal, Nicht stören und freier Speicher.
-- **Netzwerksuche:** zeigt alle Geräte, die kabelloses Debugging anbieten.
+- **Netzwerksuche:** findet alle Geräte, die kabelloses Debugging anbieten, und übernimmt neue gleich in die Geräteliste.
 
 ## Voraussetzungen
 
@@ -76,7 +76,7 @@ Gekoppelt wird nur einmal. Danach verbindet sich der Adapter von selbst wieder �
 Android schaltet kabelloses Debugging bei jedem Neustart aus und oft auch, wenn das Handy das WLAN verlässt. Die Kopplung bleibt, aber kabelloses Debugging muss wieder eingeschaltet werden. Das kann eine Automatisierungs-App selbst erledigen – sie braucht dafür nur eine Berechtigung, die normale Apps nicht bekommen und die sich nur per adb vergeben lässt:
 
 1. Eine Automatisierungs-App auf dem Gerät installieren, z. B. **Tasker**, **MacroDroid** oder **Automate**.
-2. In den Adapter-Einstellungen in der Geräteliste in der Zeile des Geräts **Automatisierungs-App erlauben** drücken. Der Adapter findet die App auf dem Gerät und gibt ihr die Berechtigung `WRITE_SECURE_SETTINGS`. Für eine andere App sie vorher in **App für Neustart** auswählen – die Liste zeigt die auf dem Gerät gefundenen Apps.
+2. In den Adapter-Einstellungen in der Geräteliste in der Zeile des Geräts **Berechtigung geben** drücken (Spalte *Nach Neustart einschalten*). Der Adapter findet die App auf dem Gerät und gibt ihr die Berechtigung `WRITE_SECURE_SETTINGS`. Für eine andere App sie vorher in **Einschalt-App** auswählen – die Liste zeigt die auf dem Gerät gefundenen Apps.
 3. In der App eine Regel anlegen, die die globale Einstellung `adb_wifi_enabled` auf `1` setzt.
 
 **Beispiel für Tasker:**

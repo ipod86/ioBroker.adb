@@ -79,7 +79,7 @@
 						{
 							"type": "selectSendTo",
 							"attr": "automationApp",
-							"title": "App for reboot (optional)",
+							"title": "Switch-on app",
 							"width": "18%",
 							"command": "listApps",
 							"jsonData": "{\"ip\": \"${data.ip}\"}",
@@ -93,9 +93,9 @@
 						{
 							"type": "sendTo",
 							"attr": "_grant",
-							"title": "Stay connected after reboot",
+							"title": "Switch on after reboot",
 							"width": "18%",
-							"label": "Allow automation app",
+							"label": "Grant permission",
 							"command": "grantAutomation",
 							"jsonData": "{\"ip\": \"${data.ip}\", \"app\": \"${data.automationApp || ''}\"}",
 							"variant": "outlined",
@@ -107,7 +107,7 @@
 				},
 				"automationHint": {
 					"type": "staticText",
-					"text": "Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device. In \"App for reboot\" choose the app from the apps found on the device, or leave \"Automatic\". Only for devices with automatic port.",
+					"text": "Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself. \"Switch-on app\": the app that should do it – \"Automatic\" finds MacroDroid, Tasker or Automate on the device itself. \"Grant permission\" gives this app the right to switch wireless debugging on; then create a rule in the app (see README). Only for devices with automatic port.",
 					"newLine": true,
 					"xs": 12,
 					"sm": 12,
@@ -117,7 +117,7 @@
 				},
 				"discover": {
 					"type": "sendTo",
-					"label": "Search the network for devices with wireless debugging",
+					"label": "Search the network and add new devices",
 					"command": "discover",
 					"variant": "outlined",
 					"icon": "search",
@@ -128,7 +128,9 @@
 					"sm": 12,
 					"md": 8,
 					"lg": 6,
-					"xl": 6
+					"xl": 6,
+					"jsonData": "{\"devices\": ${JSON.stringify(data.devices || [])}}",
+					"useNative": true
 				}
 			}
 		},

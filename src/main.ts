@@ -34,7 +34,10 @@ interface TrackedDevice {
 }
 
 /** Answer texts (keys of admin/i18n) */
-const FOUND = 'Found in the network:\n%s';
+const DISCOVER_KNOWN = '%s – already in the device list';
+const DISCOVER_NEW = '%s (%s) – new, added to the device list';
+const DISCOVER_NOTHING_NEW = 'Found in the network:\n%s\nNo new devices.';
+const DISCOVER_ADDED = 'Found in the network:\n%s\nPair the new devices on the tab "Pair" and save the settings.';
 const NONE_FOUND = 'No device found. Is wireless debugging switched on and the device in the same network?';
 const PAIRED = 'Paired with %s. The device will be connected within a few seconds.';
 const PAIRED_ADDED = 'Paired with %s and added to the device list. Please save the settings.';
@@ -715,18 +718,40 @@ class AdbAdapter extends utils.Adapter {
 	}
 
 	/**
-	 * Lists devices with wireless debugging in the network.
+	 * Searches the network for devices with wireless debugging and adds the new ones
+	 * to the device list in the form (port empty = automatic).
 	 *
-	 * @param _msg unused
+	 * @param msg devices currently shown in the form
 	 */
-	private async discover(_msg: Record<string, unknown>): Promise<Record<string, unknown>> {
+	private async discover(msg: Record<string, unknown>): Promise<Record<string, unknown>> {
 		this.discovery!.refresh();
 		await this.delay(3000);
 		const list = this.discovery!.devices();
 		if (!list.length) {
 			return { result: this.t(NONE_FOUND) };
 		}
-		return { result: this.t(FOUND, list.map(s => `${s.ip} (port ${s.port}, ${s.name})`).join('\n')) };
+		const devices: DeviceConfig[] = Array.isArray(msg.devices)
+			? (msg.devices as DeviceConfig[])
+			: [...(this.config.devices ?? [])];
+		const known = new Set(devices.map(d => String(d.ip).trim()));
+		const lines: string[] = [];
+		const added: DeviceConfig[] = [];
+		for (const s of list) {
+			if (known.has(s.ip)) {
+				lines.push(this.t(DISCOVER_KNOWN, s.ip));
+			} else {
+				const name = s.name.replace(/^adb-/, '').replace(/-[^-]+$/, '') || s.ip;
+				added.push({ enabled: true, name, ip: s.ip, port: '', automationApp: 'auto' });
+				lines.push(this.t(DISCOVER_NEW, s.ip, name));
+			}
+		}
+		if (!added.length) {
+			return { result: this.t(DISCOVER_NOTHING_NEW, lines.join('\n')) };
+		}
+		return {
+			result: this.t(DISCOVER_ADDED, lines.join('\n')),
+			native: { devices: [...devices, ...added] },
+		};
 	}
 
 	/**

@@ -27,7 +27,7 @@ Control Android devices – phones, tablets, TV boxes, Android TV – through th
 - **Automatic reconnect** when a device was switched off, asleep or out of the network.
 - **Commands:** shell command with answer, send a key, start and stop apps, reboot, screenshot.
 - **Device info:** model, Android version, current port, plain-language connection status – and while connected battery, charging, screen on, app in the foreground, Wi-Fi signal, do not disturb and free storage.
-- **Network search:** lists all devices that offer wireless debugging.
+- **Network search:** finds all devices that offer wireless debugging and adds the new ones to the device list.
 
 ## Requirements
 
@@ -85,7 +85,7 @@ Pairing is done only once. Later the device is connected again by itself – als
 Android switches wireless debugging off at every reboot and often when the phone leaves the Wi-Fi. Pairing stays, but wireless debugging has to be switched on again. An automation app can do that by itself – it only needs a permission that normal apps don't get and that can only be given via adb:
 
 1. Install an automation app on the device, e.g. **Tasker**, **MacroDroid** or **Automate**.
-2. In the adapter settings, device list: press **Allow automation app** in the row of the device. The adapter finds the app on the device and gives it the permission `WRITE_SECURE_SETTINGS`. For another app choose it in **App for reboot** first – the list shows the apps found on the device.
+2. In the adapter settings, device list: press **Grant permission** (column *Switch on after reboot*) in the row of the device. The adapter finds the app on the device and gives it the permission `WRITE_SECURE_SETTINGS`. For another app choose it in **Switch-on app** first – the list shows the apps found on the device.
 3. In the app create a rule that sets the global setting `adb_wifi_enabled` to `1`.
 
 **Example for Tasker:**
