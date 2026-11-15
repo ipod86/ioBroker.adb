@@ -135,7 +135,16 @@ export class Discovery {
 
 	/** All devices that announce wireless debugging */
 	devices(): FoundService[] {
-		return [...this.connect.values()].sort((a, b) => a.ip.localeCompare(b.ip));
+		// a device that switched wireless debugging off without a goodbye can still be
+		// listed with its old port: only the newest announcement per IP address counts
+		const newest = new Map<string, FoundService>();
+		for (const s of this.connect.values()) {
+			const prev = newest.get(s.ip);
+			if (!prev || s.seen > prev.seen) {
+				newest.set(s.ip, s);
+			}
+		}
+		return [...newest.values()].sort((a, b) => a.ip.localeCompare(b.ip));
 	}
 
 	/**

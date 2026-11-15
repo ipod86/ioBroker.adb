@@ -130,7 +130,14 @@ class Discovery {
   }
   /** All devices that announce wireless debugging */
   devices() {
-    return [...this.connect.values()].sort((a, b) => a.ip.localeCompare(b.ip));
+    const newest = /* @__PURE__ */ new Map();
+    for (const s of this.connect.values()) {
+      const prev = newest.get(s.ip);
+      if (!prev || s.seen > prev.seen) {
+        newest.set(s.ip, s);
+      }
+    }
+    return [...newest.values()].sort((a, b) => a.ip.localeCompare(b.ip));
   }
   /**
    * Waits until a phone announces a pairing service that matches.
