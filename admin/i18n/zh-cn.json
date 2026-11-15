@@ -4,7 +4,7 @@
 	"Active": "积极的",
 	"Allow automation app": "允许自动化应用程序",
 	"Android 11 and newer: pair each device once. On the device: Settings → Developer options → Wireless debugging → switch on. Then choose one of the two ways below. Pairing is remembered; the device is connected again automatically later, even if its port changes.": "Android 11 及更高版本：将每个设备配对一次。在设备上：设置→开发者选项→无线调试→打开。然后选择以下两种方式之一。配对被记住；即使端口发生变化，设备也会稍后自动再次连接。",
-	"Android switches wireless debugging off at every reboot. An automation app on the device (e.g. MacroDroid, Tasker, Automate) can switch it on again by itself. Choose the app in \"App for reboot\" – the list shows the apps installed on the connected device, or type the package name – and press \"Allow automation app\". Empty = the adapter looks for MacroDroid, Tasker or Automate itself. Only for devices with automatic port.": "Android 在每次重新启动时都会关闭无线调试。设备上的自动化应用程序（例如 MacroDroid、Tasker、Automate）可以自行再次打开它。在“用于重新启动的应用程序”中选择应用程序 - 列表显示已连接设备上安装的应用程序，或键入包名称 - 然后按“允许自动化应用程序”。空 = 适配器寻找 MacroDroid、Tasker 或 Automate 本身。仅适用于具有自动端口的设备。",
+	"Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device – the adapter finds the app on the device. For another app enter its package name in \"App for reboot\". Only for devices with automatic port.": "Android 在每次重新启动时都会关闭无线调试。设备上的自动化应用程序（MacroDroid、Tasker 或 Automate）可以自行再次打开：按设备行中的“允许自动化应用程序” – 适配器在设备上找到该应用程序。对于另一个应用程序，请在“用于重新启动的应用程序”中输入其包名称。仅适用于具有自动端口的设备。",
 	"App for reboot (optional)": "用于重启的应用程序（可选）",
 	"Check connections every": "检查连接间隔",
 	"Devices": "设备",
@@ -44,5 +44,6 @@
 	"Wait for the device (60 s)": "等待设备（60 秒）",
 	"adb server": "亚行服务器",
 	"adb server address": "亚行服务器地址",
-	"adb server port": "亚行服务器端口"
+	"adb server port": "亚行服务器端口",
+	"e.g. net.dinglisch.android.taskerm": "例如net.dinglisch.android.taskerm"
 }

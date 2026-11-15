@@ -4,7 +4,7 @@
 	"Active": "Активный",
 	"Allow automation app": "Разрешить приложение автоматизации",
 	"Android 11 and newer: pair each device once. On the device: Settings → Developer options → Wireless debugging → switch on. Then choose one of the two ways below. Pairing is remembered; the device is connected again automatically later, even if its port changes.": "Android 11 и более поздних версий: выполните сопряжение каждого устройства один раз. На устройстве: Настройки → Параметры разработчика → Беспроводная отладка → включить. Тогда выберите один из двух способов ниже. Сопряжение запоминается; устройство подключается снова автоматически позже, даже если его порт изменится.",
-	"Android switches wireless debugging off at every reboot. An automation app on the device (e.g. MacroDroid, Tasker, Automate) can switch it on again by itself. Choose the app in \"App for reboot\" – the list shows the apps installed on the connected device, or type the package name – and press \"Allow automation app\". Empty = the adapter looks for MacroDroid, Tasker or Automate itself. Only for devices with automatic port.": "Android отключает беспроводную отладку при каждой перезагрузке. Приложение автоматизации на устройстве (например, MacroDroid, Tasker, Automate) может снова включить его самостоятельно. Выберите приложение в «Приложение для перезагрузки» — в списке показаны приложения, установленные на подключенном устройстве, или введите имя пакета — и нажмите «Разрешить приложение автоматизации». Пусто = адаптер сам ищет MacroDroid, Tasker или Automate. Только для устройств с автоматическим портом.",
+	"Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device – the adapter finds the app on the device. For another app enter its package name in \"App for reboot\". Only for devices with automatic port.": "Android отключает беспроводную отладку при каждой перезагрузке. Приложение автоматизации на устройстве (MacroDroid, Tasker или Automate) может снова включить его самостоятельно: нажмите «Разрешить приложение автоматизации» в строке устройства — адаптер найдет приложение на устройстве. Для другого приложения введите имя его пакета в поле «Приложение для перезагрузки». Только для устройств с автоматическим портом.",
 	"App for reboot (optional)": "Приложение для перезагрузки (необязательно)",
 	"Check connections every": "Проверяйте соединения каждые",
 	"Devices": "Устройства",
@@ -44,5 +44,6 @@
 	"Wait for the device (60 s)": "Подождать устройство (60 с)",
 	"adb server": "adb-сервер",
 	"adb server address": "адрес сервера adb",
-	"adb server port": "порт сервера adb"
+	"adb server port": "порт сервера adb",
+	"e.g. net.dinglisch.android.taskerm": "например net.dinglisch.android.taskerm"
 }

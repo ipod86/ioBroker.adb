@@ -235,10 +235,6 @@ class AdbAdapter extends utils.Adapter {
 				case 'discover':
 					answer = await this.discover(msg);
 					break;
-				case 'listApps':
-					// autocompleteSendTo expects a plain array
-					this.sendTo(obj.from, obj.command, await this.listApps(msg), obj.callback);
-					return;
 				case 'grantAutomation':
 					answer = await this.grantAutomation(msg);
 					break;
@@ -436,33 +432,6 @@ class AdbAdapter extends utils.Adapter {
 			text = text.replace('%s', a);
 		}
 		return text;
-	}
-
-	/**
-	 * Apps installed on a device, for the app selection in the device list. Known automation apps come first.
-	 *
-	 * @param msg ip of the device
-	 */
-	private async listApps(
-		msg: Record<string, unknown>,
-	): Promise<{ value: string; label: string; noTranslation: true }[]> {
-		const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
-		const dev = this.devices.find(d => d.ip === ip);
-		if (!dev || !dev.connected) {
-			return [];
-		}
-		try {
-			const pkgs = parsePackages(await dev.run('pm list packages -3 --user 0')).sort();
-			const known = pkgs.filter(p => AUTOMATION_APPS[p]);
-			const rest = pkgs.filter(p => !AUTOMATION_APPS[p]);
-			return [
-				...known.map(p => ({ value: p, label: `${AUTOMATION_APPS[p]} (${p})`, noTranslation: true as const })),
-				...rest.map(p => ({ value: p, label: p, noTranslation: true as const })),
-			];
-		} catch (e) {
-			this.log.debug(`listApps ${ip}: ${errorText(e)}`);
-			return [];
-		}
 	}
 
 	/**

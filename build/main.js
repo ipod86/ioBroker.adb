@@ -208,9 +208,6 @@ class AdbAdapter extends utils.Adapter {
         case "discover":
           answer = await this.discover(msg);
           break;
-        case "listApps":
-          this.sendTo(obj.from, obj.command, await this.listApps(msg), obj.callback);
-          return;
         case "grantAutomation":
           answer = await this.grantAutomation(msg);
           break;
@@ -395,30 +392,6 @@ class AdbAdapter extends utils.Adapter {
       text = text.replace("%s", a);
     }
     return text;
-  }
-  /**
-   * Apps installed on a device, for the app selection in the device list. Known automation apps come first.
-   *
-   * @param msg ip of the device
-   */
-  async listApps(msg) {
-    const ip = typeof msg.ip === "string" ? msg.ip.trim() : "";
-    const dev = this.devices.find((d) => d.ip === ip);
-    if (!dev || !dev.connected) {
-      return [];
-    }
-    try {
-      const pkgs = (0, import_util.parsePackages)(await dev.run("pm list packages -3 --user 0")).sort();
-      const known = pkgs.filter((p) => import_util.AUTOMATION_APPS[p]);
-      const rest = pkgs.filter((p) => !import_util.AUTOMATION_APPS[p]);
-      return [
-        ...known.map((p) => ({ value: p, label: `${import_util.AUTOMATION_APPS[p]} (${p})`, noTranslation: true })),
-        ...rest.map((p) => ({ value: p, label: p, noTranslation: true }))
-      ];
-    } catch (e) {
-      this.log.debug(`listApps ${ip}: ${(0, import_device.errorText)(e)}`);
-      return [];
-    }
   }
   /**
    * Allows installed automation apps to write secure settings, so they can switch
