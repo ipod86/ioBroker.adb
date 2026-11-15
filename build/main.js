@@ -25,6 +25,7 @@ var utils = __toESM(require("@iobroker/adapter-core"));
 var import_node_crypto = require("node:crypto");
 var import_node_fs = require("node:fs");
 var import_node_path = require("node:path");
+var import_node_child_process = require("node:child_process");
 var import_adbkit = require("@devicefarmer/adbkit");
 var import_adbHost = require("./lib/adbHost");
 var import_device = require("./lib/device");
@@ -43,6 +44,9 @@ class AdbAdapter extends utils.Adapter {
   serverPort = 5037;
   serverOk;
   texts = {};
+  adbBin = "adb";
+  /** result of the check of the adb program */
+  adbCheck = "";
   qr;
   /**
    * @param options adapter options
@@ -63,6 +67,8 @@ class AdbAdapter extends utils.Adapter {
     this.serverHost = host === "localhost" ? "127.0.0.1" : host;
     this.serverPort = (_a = (0, import_util.parsePort)(this.config.adbPortOption)) != null ? _a : 5037;
     const bin = String(this.config.adbPath || "").trim() || "adb";
+    this.adbBin = bin;
+    await this.checkAdbProgram();
     this.client = import_adbkit.Adb.createClient({ host: this.serverHost, port: this.serverPort, bin });
     this.discovery = new import_discovery.Discovery(this.log);
     this.discovery.start();
@@ -104,6 +110,63 @@ class AdbAdapter extends utils.Adapter {
     for (const dev of this.devices) {
       if (!dev.connected) {
         await dev.ensureConnected(true);
+      }
+    }
+  }
+  /** True if the adb server runs on this computer */
+  get localServer() {
+    return ["127.0.0.1", "::1", "localhost"].includes(this.serverHost);
+  }
+  /**
+   * Checks whether the adb program is installed and new enough for pairing.
+   * Problems are shown as notification in the admin.
+   *
+   * @param notify register an admin notification on problems
+   */
+  async checkAdbProgram(notify = true) {
+    if (!this.localServer) {
+      this.adbCheck = this.t(
+        "The adb server runs on %s \u2013 the adb program there is not checked.",
+        this.serverHost
+      );
+      return;
+    }
+    const output = await new Promise((resolve) => {
+      (0, import_node_child_process.execFile)(
+        this.adbBin,
+        ["version"],
+        { timeout: 1e4 },
+        (err, stdout) => resolve({ out: String(stdout != null ? stdout : ""), err: err != null ? err : void 0 })
+      );
+    });
+    let problem = "";
+    if (output.err && (output.err.code === "ENOENT" || !output.out)) {
+      problem = this.t(
+        "The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb \u2013 then restart the adapter."
+      );
+      this.adbCheck = `\u274C ${problem}`;
+    } else {
+      const v = (0, import_util.parseAdbVersion)(output.out);
+      if (!v) {
+        this.adbCheck = this.t("adb found, version unknown");
+      } else if (v.major < import_util.ADB_MIN_PAIRING) {
+        problem = this.t(
+          "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Update it, e.g. with: sudo apt install adb",
+          v.text
+        );
+        this.adbCheck = `\u26A0\uFE0F ${problem}`;
+      } else {
+        this.adbCheck = `\u2705 ${this.t("adb version %s \u2013 pairing supported", v.text)}`;
+      }
+    }
+    if (problem) {
+      this.log.warn(problem);
+      if (notify) {
+        try {
+          await this.registerNotification("adb", "adbProgram", problem);
+        } catch (e) {
+          this.log.debug(`notification: ${(0, import_device.errorText)(e)}`);
+        }
       }
     }
   }
@@ -233,6 +296,10 @@ class AdbAdapter extends utils.Adapter {
         case "discover":
           answer = await this.discover(msg);
           break;
+        case "adbVersion":
+          await this.checkAdbProgram(false);
+          this.sendTo(obj.from, obj.command, this.adbCheck, obj.callback);
+          return;
         case "listApps":
           this.sendTo(obj.from, obj.command, await this.listApps(msg), obj.callback);
           return;

@@ -18,6 +18,7 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var util_exports = {};
 __export(util_exports, {
+  ADB_MIN_PAIRING: () => ADB_MIN_PAIRING,
   AUTOMATION_APPS: () => AUTOMATION_APPS,
   checkDevices: () => checkDevices,
   cleanShellCommand: () => cleanShellCommand,
@@ -29,6 +30,7 @@ __export(util_exports, {
   normalizePairingCode: () => normalizePairingCode,
   pairSucceeded: () => pairSucceeded,
   pairingQrText: () => pairingQrText,
+  parseAdbVersion: () => parseAdbVersion,
   parsePackages: () => parsePackages,
   parsePort: () => parsePort,
   portOfSerial: () => portOfSerial,
@@ -119,8 +121,14 @@ function parsePackages(output) {
 function isPackageName(pkg) {
   return /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/.test(pkg);
 }
+function parseAdbVersion(output) {
+  const m = /^Version\s+((?:\d+:)?(\d+)\.\d+\S*)/m.exec(output);
+  return m ? { text: m[1], major: parseInt(m[2], 10) } : void 0;
+}
+const ADB_MIN_PAIRING = 30;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  ADB_MIN_PAIRING,
   AUTOMATION_APPS,
   checkDevices,
   cleanShellCommand,
@@ -132,6 +140,7 @@ function isPackageName(pkg) {
   normalizePairingCode,
   pairSucceeded,
   pairingQrText,
+  parseAdbVersion,
   parsePackages,
   parsePort,
   portOfSerial,

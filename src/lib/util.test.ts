@@ -6,6 +6,7 @@ import {
 	extractPng,
 	isPackageName,
 	parsePackages,
+	parseAdbVersion,
 	hostOfSerial,
 	isValidPairingCode,
 	normalizePairingCode,
@@ -87,6 +88,15 @@ describe('util', () => {
 		expect(isPackageName('com.arlosoft.macrodroid')).to.equal(true);
 		expect(isPackageName('kein paket')).to.equal(false);
 		expect(isPackageName('x; reboot')).to.equal(false);
+	});
+
+	it('parseAdbVersion', () => {
+		const out =
+			'Android Debug Bridge version 1.0.41\nVersion 34.0.5-debian\nInstalled as /usr/lib/android-sdk/platform-tools/adb';
+		expect(parseAdbVersion(out)).to.deep.equal({ text: '34.0.5-debian', major: 34 });
+		expect(parseAdbVersion('Android Debug Bridge version 1.0.39\nVersion 1:8.1.0+r23-5')?.major).to.equal(8);
+		expect(parseAdbVersion('Android Debug Bridge version 1.0.32')).to.equal(undefined);
+		expect(parseAdbVersion('Version 29.0.6-6')?.major).to.equal(29);
 	});
 
 	it('checkDevices', () => {

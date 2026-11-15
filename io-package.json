@@ -201,5 +201,70 @@
             },
             "native": {}
         }
+    ],
+    "notifications": [
+        {
+            "scope": "adb",
+            "name": {
+                "en": "Android Debug Bridge",
+                "de": "Android Debug Bridge",
+                "ru": "Android Debug Bridge",
+                "pt": "Android Debug Bridge",
+                "nl": "Android Debug Bridge",
+                "fr": "Android Debug Bridge",
+                "it": "Android Debug Bridge",
+                "es": "Android Debug Bridge",
+                "pl": "Android Debug Bridge",
+                "uk": "Android Debug Bridge",
+                "zh-cn": "Android Debug Bridge"
+            },
+            "description": {
+                "en": "adb program",
+                "de": "Programm adb",
+                "ru": "Программа adb",
+                "pt": "Programa adb",
+                "nl": "Programma adb",
+                "fr": "Programme adb",
+                "it": "Programma adb",
+                "es": "Programa adb",
+                "pl": "Program adb",
+                "uk": "Програма adb",
+                "zh-cn": "adb 程序"
+            },
+            "categories": [
+                {
+                    "category": "adbProgram",
+                    "name": {
+                        "en": "adb program",
+                        "de": "Programm adb",
+                        "ru": "Программа adb",
+                        "pt": "Programa adb",
+                        "nl": "Programma adb",
+                        "fr": "Programme adb",
+                        "it": "Programma adb",
+                        "es": "Programa adb",
+                        "pl": "Program adb",
+                        "uk": "Програма adb",
+                        "zh-cn": "adb 程序"
+                    },
+                    "severity": "alert",
+                    "description": {
+                        "en": "The adb program is missing or too old",
+                        "de": "Das Programm adb fehlt oder ist zu alt",
+                        "ru": "Программа adb отсутствует или устарела",
+                        "pt": "O programa adb está ausente ou desatualizado",
+                        "nl": "Het programma adb ontbreekt of is te oud",
+                        "fr": "Le programme adb est absent ou trop ancien",
+                        "it": "Il programma adb manca o è troppo vecchio",
+                        "es": "El programa adb falta o es demasiado antiguo",
+                        "pl": "Brak programu adb lub jest zbyt stary",
+                        "uk": "Програма adb відсутня або застаріла",
+                        "zh-cn": "adb 程序缺失或版本过旧"
+                    },
+                    "regex": [],
+                    "limit": 1
+                }
+            ]
+        }
     ]
 }

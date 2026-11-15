@@ -200,3 +200,17 @@ export function parsePackages(output: string): string[] {
 export function isPackageName(pkg: string): boolean {
 	return /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/.test(pkg);
 }
+
+/**
+ * Version of the adb program from the output of `adb version`, e.g. "Version 34.0.5-debian".
+ *
+ * @param output command output
+ */
+export function parseAdbVersion(output: string): { text: string; major: number } | undefined {
+	// Debian versions can carry an epoch like "1:8.1.0+r23-5"
+	const m = /^Version\s+((?:\d+:)?(\d+)\.\d+\S*)/m.exec(output);
+	return m ? { text: m[1], major: parseInt(m[2], 10) } : undefined;
+}
+
+/** adb version needed for pairing (wireless debugging, Android 11+) */
+export const ADB_MIN_PAIRING = 30;

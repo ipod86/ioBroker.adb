@@ -32,7 +32,7 @@ Control Android devices – phones, tablets, TV boxes, Android TV – through th
 ## Requirements
 
 - The `adb` program on the ioBroker computer (or another computer running an adb server). Debian/Ubuntu: `sudo apt install adb`. **Pairing needs adb version 30 or newer** (`adb version`).
-- The adapter starts the adb server itself when it runs on the same computer.
+- The adapter starts the adb server itself when it runs on the same computer. At start it checks the adb program: if it is missing or older than version 30, a notification appears in the admin with the command to install it; the tab **adb server** shows the result of the check.
 - For wireless debugging the device has to be in the same network as the adb server (not in a separate guest Wi-Fi or VLAN), because pairing and port search use mDNS.
 - Pairing with QR code needs a current admin (8.3 or newer). Pairing with code works with every admin.
 
@@ -135,6 +135,7 @@ Devices with a port keep their states and ids. The old settings are taken over. 
 - (ipod86) Wireless debugging (Android 11+): pair with pairing code or QR code; changing ports are found automatically via mDNS
 - (ipod86) New settings page (jsonConfig), network search for devices
 - (ipod86) Automatic reconnect, new states `status`, `port`, `model`, `androidVersion`, `keyevent`; screenshots per device
+- (ipod86) Check of the adb program at start with admin notification if it is missing or too old
 - (ipod86) Button to allow an automation app to switch wireless debugging on after a reboot; switch to hide the debugging notification
 - (ipod86) Rewritten in TypeScript, current adapter-core, adbkit 4, Node.js 22 or newer, js-controller 6 or newer
 - (ipod86) "localhost" no longer resolves to IPv6 (adb server only listens on IPv4); clear message if the adb program is missing
