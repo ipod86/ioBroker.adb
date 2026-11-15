@@ -27,6 +27,20 @@ Steuert Android-Geräte – Handys, Tablets, TV-Boxen, Android TV – über die 
 - Für kabelloses Debugging muss das Gerät im selben Netzwerk wie der adb-Server sein (nicht in einem getrennten Gast-WLAN oder VLAN), weil Koppeln und Port-Suche über mDNS laufen.
 - Koppeln per QR-Code braucht einen aktuellen Admin (ab 8.3). Koppeln per Code geht mit jedem Admin.
 
+### Debian 12 / Raspberry Pi OS bookworm: neueres adb aus den Backports
+
+Debian 12 (bookworm) und das darauf basierende Raspberry Pi OS liefern adb in Version 29 – eine Version zu alt zum Koppeln (Geräte mit festem Port funktionieren). Die neuere Version 34 gibt es in den offiziellen Debian-Backports, für x86 und ARM (arm64, armhf):
+
+```bash
+echo "deb http://deb.debian.org/debian bookworm-backports main" | sudo tee /etc/apt/sources.list.d/bookworm-backports.list
+sudo apt update
+sudo apt install -t bookworm-backports adb
+adb kill-server
+adb version   # sollte 34.x zeigen
+```
+
+Danach den Adapter neu starten. Debian 13 (trixie) und Ubuntu 24.04 haben bereits Version 34.
+
 ## Einrichtung
 
 ### Ab Android 11 (kabelloses Debugging)

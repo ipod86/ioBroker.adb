@@ -51,7 +51,7 @@
 	"adb server": "adb-сервер",
 	"adb server address": "адрес сервера adb",
 	"adb server port": "порт сервера adb",
-	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Update it, e.g. with: sudo apt install adb": "Версия adb %s слишком старая для беспроводной отладки (для сопряжения требуется версия 30 или новее). Обновите его, например. с: sudo apt install adb",
+	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "Версия adb %s слишком старая для беспроводной отладки (для сопряжения требуется версия 30 или новее). Книжный червь Debian 12/Raspberry Pi OS: установите более новую версию из резервных копий книжного червя, см. документацию адаптера.",
 	"adb version %s – pairing supported": "версия adb %s – поддерживается сопряжение",
 	"e.g. net.dinglisch.android.taskerm": "например net.dinglisch.android.taskerm"
 }

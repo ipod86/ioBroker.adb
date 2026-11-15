@@ -36,6 +36,20 @@ Control Android devices – phones, tablets, TV boxes, Android TV – through th
 - For wireless debugging the device has to be in the same network as the adb server (not in a separate guest Wi-Fi or VLAN), because pairing and port search use mDNS.
 - Pairing with QR code needs a current admin (8.3 or newer). Pairing with code works with every admin.
 
+### Debian 12 / Raspberry Pi OS bookworm: newer adb from backports
+
+Debian 12 (bookworm) and Raspberry Pi OS based on it ship adb version 29 – one too old for pairing (devices with a fixed port work). The newer version 34 is available from the official Debian backports, for x86 and ARM (arm64, armhf):
+
+```bash
+echo "deb http://deb.debian.org/debian bookworm-backports main" | sudo tee /etc/apt/sources.list.d/bookworm-backports.list
+sudo apt update
+sudo apt install -t bookworm-backports adb
+adb kill-server
+adb version   # should show 34.x
+```
+
+Then restart the adapter. Debian 13 (trixie) and Ubuntu 24.04 already have version 34.
+
 ## Setup
 
 ### Android 11 and newer (wireless debugging)

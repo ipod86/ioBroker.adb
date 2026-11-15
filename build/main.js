@@ -151,7 +151,7 @@ class AdbAdapter extends utils.Adapter {
         this.adbCheck = this.t("adb found, version unknown");
       } else if (v.major < import_util.ADB_MIN_PAIRING) {
         problem = this.t(
-          "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Update it, e.g. with: sudo apt install adb",
+          "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.",
           v.text
         );
         this.adbCheck = `\u26A0\uFE0F ${problem}`;

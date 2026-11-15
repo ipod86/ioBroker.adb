@@ -51,7 +51,7 @@
 	"The adb server runs on %s – the adb program there is not checked.": "The adb server runs on %s – the adb program there is not checked.",
 	"The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb – then restart the adapter.": "The adb program is not installed. On Debian/Ubuntu install it with: sudo apt install adb – then restart the adapter.",
 	"adb found, version unknown": "adb found, version unknown",
-	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Update it, e.g. with: sudo apt install adb": "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Update it, e.g. with: sudo apt install adb",
 	"adb version %s – pairing supported": "adb version %s – pairing supported",
-	"Check of the adb program": "Check of the adb program"
+	"Check of the adb program": "Check of the adb program",
+	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation."
 }

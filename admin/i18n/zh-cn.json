@@ -51,7 +51,7 @@
 	"adb server": "亚行服务器",
 	"adb server address": "亚行服务器地址",
 	"adb server port": "亚行服务器端口",
-	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Update it, e.g. with: sudo apt install adb": "adb 版本 %s 太旧，无法进行无线调试（配对需要版本 30 或更高版本）。更新它，例如与： sudo apt install adb",
+	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb 版本 %s 太旧，无法进行无线调试（配对需要版本 30 或更高版本）。 Debian 12 / Raspberry Pi OS bookworm：从 bookworm-b​​ackports 安装更新版本，请参阅适配器文档。",
 	"adb version %s – pairing supported": "adb 版本 %s – 支持配对",
 	"e.g. net.dinglisch.android.taskerm": "例如net.dinglisch.android.taskerm"
 }
