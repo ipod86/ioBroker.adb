@@ -33,16 +33,11 @@ export class Discovery {
 	 * @param log logger
 	 * @param log.debug debug output
 	 * @param log.warn warning output
-	 * @param timers timers of the adapter (cleared automatically on unload)
-	 * @param timers.setTimeout starts a timer
-	 * @param timers.clearTimeout stops a timer
+	 * @param adapter adapter, its timers are cleared automatically on unload
 	 */
 	constructor(
 		private readonly log: { debug: (m: string) => void; warn: (m: string) => void },
-		private readonly timers: {
-			setTimeout(cb: () => void, ms: number): ioBroker.Timeout | undefined;
-			clearTimeout(t: ioBroker.Timeout | undefined): void;
-		},
+		private readonly adapter: Pick<ioBroker.Adapter, 'setTimeout' | 'clearTimeout'>,
 	) {}
 
 	/** Starts listening */
@@ -142,11 +137,11 @@ export class Discovery {
 			const waiter: (typeof this.waiters)[number] = {
 				match,
 				resolve: (s: FoundService): void => {
-					this.timers.clearTimeout(waiter.timer);
+					this.adapter.clearTimeout(waiter.timer);
 					resolve(s);
 				},
 			};
-			waiter.timer = this.timers.setTimeout(() => {
+			waiter.timer = this.adapter.setTimeout(() => {
 				this.waiters = this.waiters.filter(w => w !== waiter);
 				resolve(undefined);
 			}, timeoutMs);
@@ -182,7 +177,7 @@ export class Discovery {
 		}
 		this.browsers = [];
 		for (const w of this.waiters) {
-			this.timers.clearTimeout(w.timer);
+			this.adapter.clearTimeout(w.timer);
 		}
 		this.waiters = [];
 		try {

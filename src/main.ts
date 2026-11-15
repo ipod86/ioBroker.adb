@@ -95,10 +95,7 @@ class AdbAdapter extends utils.Adapter {
 		await this.checkAdbProgram();
 
 		this.client = Adb.createClient({ host: this.serverHost, port: this.serverPort, bin });
-		this.discovery = new Discovery(this.log, {
-			setTimeout: (cb, ms) => this.setTimeout(cb, ms),
-			clearTimeout: t => this.clearTimeout(t),
-		});
+		this.discovery = new Discovery(this.log, this);
 		this.discovery.start();
 
 		const { ok, problems } = checkDevices(this.config.devices);

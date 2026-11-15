@@ -292,14 +292,14 @@ const SHELL_MS = 12e4;
 const WAIT_MS = 1e4;
 class AndroidDevice {
   /**
-   * @param host adapter
+   * @param adapter adapter
    * @param client adb client
    * @param discovery mDNS discovery
    * @param cfg device configuration
    * @param objectId object id to use instead of the default (devices of version 0.0.x)
    */
-  constructor(host, client, discovery, cfg, objectId) {
-    this.host = host;
+  constructor(adapter, client, discovery, cfg, objectId) {
+    this.adapter = adapter;
     this.client = client;
     this.discovery = discovery;
     this.ip = cfg.ip;
@@ -378,7 +378,7 @@ class AndroidDevice {
     try {
       await this.withTimeout(this.client.connect(this.ip, port), WAIT_MS, "connect timeout");
       this.serial = serial;
-      await this.host.setState(this.stateId("port"), { val: port, ack: true });
+      await this.adapter.setState(this.stateId("port"), { val: port, ack: true });
       await this.withTimeout(this.device().waitForDevice(), WAIT_MS, "device did not answer");
       await this.onConnected();
       return true;
@@ -403,7 +403,7 @@ class AndroidDevice {
       this.serial = serial;
       const p = (0, import_util.portOfSerial)(serial);
       if (p) {
-        await this.host.setState(this.stateId("port"), { val: p, ack: true });
+        await this.adapter.setState(this.stateId("port"), { val: p, ack: true });
       }
       await this.onConnected();
     } else if (serial === this.serial || !this.serial) {
@@ -423,8 +423,8 @@ class AndroidDevice {
       await this.readInfo();
     }
     if (this.hideNotification) {
-      this.host.clearTimeout(this.notifyTimer);
-      this.notifyTimer = this.host.setTimeout(() => void this.applyNotification(), 3e3);
+      this.adapter.clearTimeout(this.notifyTimer);
+      this.notifyTimer = this.adapter.setTimeout(() => void this.applyNotification(), 3e3);
     }
   }
   /**
@@ -458,9 +458,11 @@ class AndroidDevice {
         const cmd = this.hideNotification ? `cmd notification snooze --for ${SNOOZE_MS} '${key}'` : `cmd notification unsnooze '${key}'`;
         await this.run(cmd);
       }
-      this.host.log.debug(`${this.label}: debugging notification ${this.hideNotification ? "snoozed" : "shown"}`);
+      this.adapter.log.debug(
+        `${this.label}: debugging notification ${this.hideNotification ? "snoozed" : "shown"}`
+      );
     } catch (e) {
-      this.host.log.warn(`${this.label}: could not change the debugging notification: ${errorText(e)}`);
+      this.adapter.log.warn(`${this.label}: could not change the debugging notification: ${errorText(e)}`);
     }
   }
   /** Reads model and Android version. */
@@ -469,14 +471,14 @@ class AndroidDevice {
     try {
       const p = await this.device().getProperties();
       const model = [p["ro.product.manufacturer"], p["ro.product.model"]].filter(Boolean).join(" ");
-      await this.host.setState(this.stateId("model"), { val: model, ack: true });
-      await this.host.setState(this.stateId("androidVersion"), {
+      await this.adapter.setState(this.stateId("model"), { val: model, ack: true });
+      await this.adapter.setState(this.stateId("androidVersion"), {
         val: (_a = p["ro.build.version.release"]) != null ? _a : "",
         ack: true
       });
       this.infoRead = true;
     } catch (e) {
-      this.host.log.debug(`${this.label}: could not read device info: ${errorText(e)}`);
+      this.adapter.log.debug(`${this.label}: could not read device info: ${errorText(e)}`);
     }
     await this.readApps();
   }
@@ -485,7 +487,7 @@ class AndroidDevice {
     try {
       this.apps = (0, import_util.parsePackages)(await this.readShell("pm list packages -3 --user 0")).sort();
     } catch (e) {
-      this.host.log.debug(`${this.label}: could not read the app list: ${errorText(e)}`);
+      this.adapter.log.debug(`${this.label}: could not read the app list: ${errorText(e)}`);
     }
   }
   /**
@@ -497,10 +499,10 @@ class AndroidDevice {
     if (this.connected !== on) {
       this.connected = on;
       if (on) {
-        this.host.log.info(`${this.label} connected`);
+        this.adapter.log.info(`${this.label} connected`);
       }
     }
-    await this.host.setState(this.stateId("connection"), { val: on, ack: true });
+    await this.adapter.setState(this.stateId("connection"), { val: on, ack: true });
   }
   /**
    * Writes the status text and logs changes once.
@@ -512,12 +514,12 @@ class AndroidDevice {
     if (text !== this.lastStatus) {
       this.lastStatus = text;
       if (!quiet) {
-        this.host.log.warn(`${this.label}: ${text}`);
+        this.adapter.log.warn(`${this.label}: ${text}`);
       } else {
-        this.host.log.debug(`${this.label}: ${text}`);
+        this.adapter.log.debug(`${this.label}: ${text}`);
       }
     }
-    await this.host.setState(this.stateId("status"), { val: text, ack: true });
+    await this.adapter.setState(this.stateId("status"), { val: text, ack: true });
   }
   /** adb client for the current connection. */
   device() {
@@ -570,7 +572,7 @@ class AndroidDevice {
       }
     } catch (e) {
       const msg = errorText(e);
-      this.host.log.error(`${this.label}: ${state} failed: ${msg}`);
+      this.adapter.log.error(`${this.label}: ${state} failed: ${msg}`);
       await this.setResult(`error: ${msg}`);
       if (/closed|ECONNRESET|not found|offline/i.test(msg)) {
         await this.setConnected(false);
@@ -627,14 +629,14 @@ class AndroidDevice {
    */
   withTimeout(p, ms, msg) {
     return new Promise((resolve, reject) => {
-      const t = this.host.setTimeout(() => reject(new Error(msg)), ms);
+      const t = this.adapter.setTimeout(() => reject(new Error(msg)), ms);
       p.then(
         (v) => {
-          this.host.clearTimeout(t);
+          this.adapter.clearTimeout(t);
           resolve(v);
         },
         (e) => {
-          this.host.clearTimeout(t);
+          this.adapter.clearTimeout(t);
           reject(e instanceof Error ? e : new Error(String(e)));
         }
       );
@@ -644,9 +646,9 @@ class AndroidDevice {
   async screencap() {
     const png = (0, import_util.extractPng)(await import_adbkit.Adb.util.readAll(await this.device().screencap()));
     const file = `${this.objectId}.png`;
-    await this.host.writeFileAsync(this.host.namespace, file, png);
-    await this.host.writeFileAsync(this.host.namespace, "screenshot.png", png);
-    await this.setResult(`screenshot saved: /${this.host.namespace}/${file}`);
+    await this.adapter.writeFileAsync(this.adapter.namespace, file, png);
+    await this.adapter.writeFileAsync(this.adapter.namespace, "screenshot.png", png);
+    await this.setResult(`screenshot saved: /${this.adapter.namespace}/${file}`);
   }
   /**
    * Writes the result state.
@@ -654,7 +656,7 @@ class AndroidDevice {
    * @param text text to write
    */
   async setResult(text) {
-    await this.host.setState(this.stateId("result"), { val: text, ack: true });
+    await this.adapter.setState(this.stateId("result"), { val: text, ack: true });
   }
   /**
    * Full id of a state of this device.
@@ -666,7 +668,7 @@ class AndroidDevice {
   }
   /** Closes the connection */
   async close() {
-    this.host.clearTimeout(this.notifyTimer);
+    this.adapter.clearTimeout(this.notifyTimer);
     if (this.serial) {
       await this.client.disconnect(this.ip, (0, import_util.portOfSerial)(this.serial)).catch(() => void 0);
     }
