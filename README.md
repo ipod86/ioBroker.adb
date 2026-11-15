@@ -70,7 +70,7 @@ Pairing is done only once. Later the device is connected again by itself – als
 Android switches wireless debugging off at every reboot and often when the phone leaves the Wi-Fi. Pairing stays, but wireless debugging has to be switched on again. An automation app can do that by itself – it only needs a permission that normal apps don't get and that can only be given via adb:
 
 1. Install an automation app on the device, e.g. **Tasker**, **MacroDroid** or **Automate**.
-2. In the adapter settings, device list: press **Allow automation app** in the row of the device. The adapter finds the app on the device and gives it the permission `WRITE_SECURE_SETTINGS`. For another app enter its package name in **App for reboot** first.
+2. In the adapter settings, device list: press **Allow automation app** in the row of the device. The adapter finds the app on the device and gives it the permission `WRITE_SECURE_SETTINGS`. For another app choose it in **App for reboot** first – the list shows the apps found on the device.
 3. In the app create a rule that sets the global setting `adb_wifi_enabled` to `1`.
 
 **Example for Tasker:**

@@ -44,7 +44,8 @@
 	"The device refused the permission, see the log": "The device refused the permission, see the log",
 	"App for reboot (optional)": "App for reboot (optional)",
 	"This is not a valid package name": "This is not a valid package name",
-	"Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device – the adapter finds the app on the device. For another app enter its package name in \"App for reboot\". Only for devices with automatic port.": "Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device – the adapter finds the app on the device. For another app enter its package name in \"App for reboot\". Only for devices with automatic port.",
 	"e.g. net.dinglisch.android.taskerm": "e.g. net.dinglisch.android.taskerm",
-	"Hide debug notice": "Hide debug notice"
+	"Hide debug notice": "Hide debug notice",
+	"Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device. In \"App for reboot\" choose the app from the apps found on the device, or leave \"Automatic\". Only for devices with automatic port.": "Android switches wireless debugging off at every reboot. An automation app on the device (MacroDroid, Tasker or Automate) can switch it on again by itself: press \"Allow automation app\" in the row of the device. In \"App for reboot\" choose the app from the apps found on the device, or leave \"Automatic\". Only for devices with automatic port.",
+	"Automatic (MacroDroid, Tasker, Automate)": "Automatic (MacroDroid, Tasker, Automate)"
 }

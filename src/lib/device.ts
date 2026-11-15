@@ -5,6 +5,7 @@ import {
 	deviceObjectId,
 	extractPng,
 	hostOfSerial,
+	parsePackages,
 	parsePort,
 	portOfSerial,
 	startComponent,
@@ -152,6 +153,8 @@ export class AndroidDevice {
 	private infoRead = false;
 	/** Hide the debugging notification */
 	hideNotification = false;
+	/** Apps installed on the device (read when connected) */
+	apps: string[] = [];
 	private notifyTimer?: NodeJS.Timeout;
 
 	/**
@@ -339,6 +342,17 @@ export class AndroidDevice {
 			this.infoRead = true;
 		} catch (e) {
 			this.host.log.debug(`${this.label}: could not read device info: ${errorText(e)}`);
+		}
+		await this.readApps();
+	}
+
+	/** Reads the installed apps once per connection, for the app selection in the settings. */
+	async readApps(): Promise<void> {
+		try {
+			const out = await Adb.util.readAll(await this.device().shell('pm list packages -3 --user 0'));
+			this.apps = parsePackages(out.toString()).sort();
+		} catch (e) {
+			this.host.log.debug(`${this.label}: could not read the app list: ${errorText(e)}`);
 		}
 	}
 

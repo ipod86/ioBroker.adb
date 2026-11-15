@@ -161,6 +161,8 @@ class AndroidDevice {
   infoRead = false;
   /** Hide the debugging notification */
   hideNotification = false;
+  /** Apps installed on the device (read when connected) */
+  apps = [];
   notifyTimer;
   /** Text for logs */
   get label() {
@@ -317,6 +319,16 @@ class AndroidDevice {
       this.infoRead = true;
     } catch (e) {
       this.host.log.debug(`${this.label}: could not read device info: ${errorText(e)}`);
+    }
+    await this.readApps();
+  }
+  /** Reads the installed apps once per connection, for the app selection in the settings. */
+  async readApps() {
+    try {
+      const out = await import_adbkit.Adb.util.readAll(await this.device().shell("pm list packages -3 --user 0"));
+      this.apps = (0, import_util.parsePackages)(out.toString()).sort();
+    } catch (e) {
+      this.host.log.debug(`${this.label}: could not read the app list: ${errorText(e)}`);
     }
   }
   /**

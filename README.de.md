@@ -61,7 +61,7 @@ Gekoppelt wird nur einmal. Danach verbindet sich der Adapter von selbst wieder �
 Android schaltet kabelloses Debugging bei jedem Neustart aus und oft auch, wenn das Handy das WLAN verlässt. Die Kopplung bleibt, aber kabelloses Debugging muss wieder eingeschaltet werden. Das kann eine Automatisierungs-App selbst erledigen – sie braucht dafür nur eine Berechtigung, die normale Apps nicht bekommen und die sich nur per adb vergeben lässt:
 
 1. Eine Automatisierungs-App auf dem Gerät installieren, z. B. **Tasker**, **MacroDroid** oder **Automate**.
-2. In den Adapter-Einstellungen in der Geräteliste in der Zeile des Geräts **Automatisierungs-App erlauben** drücken. Der Adapter findet die App auf dem Gerät und gibt ihr die Berechtigung `WRITE_SECURE_SETTINGS`. Für eine andere App vorher deren Paketnamen in **App für Neustart** eintragen.
+2. In den Adapter-Einstellungen in der Geräteliste in der Zeile des Geräts **Automatisierungs-App erlauben** drücken. Der Adapter findet die App auf dem Gerät und gibt ihr die Berechtigung `WRITE_SECURE_SETTINGS`. Für eine andere App sie vorher in **App für Neustart** auswählen – die Liste zeigt die auf dem Gerät gefundenen Apps.
 3. In der App eine Regel anlegen, die die globale Einstellung `adb_wifi_enabled` auf `1` setzt.
 
 **Beispiel für Tasker:**

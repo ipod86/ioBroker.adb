@@ -233,6 +233,9 @@ class AdbAdapter extends utils.Adapter {
         case "discover":
           answer = await this.discover(msg);
           break;
+        case "listApps":
+          this.sendTo(obj.from, obj.command, await this.listApps(msg), obj.callback);
+          return;
         case "grantAutomation":
           answer = await this.grantAutomation(msg);
           break;
@@ -417,6 +420,34 @@ class AdbAdapter extends utils.Adapter {
       text = text.replace("%s", a);
     }
     return text;
+  }
+  /**
+   * Apps of a device for the selection in the device list: automatic search first,
+   * then the known automation apps found on the device, then all other apps.
+   *
+   * @param msg ip of the device
+   */
+  async listApps(msg) {
+    const ip = typeof msg.ip === "string" ? msg.ip.trim() : "";
+    const dev = this.devices.find((d) => d.ip === ip);
+    const list = [
+      { value: "", label: "Automatic (MacroDroid, Tasker, Automate)" }
+    ];
+    if (!dev) {
+      return list;
+    }
+    if (!dev.apps.length && dev.connected) {
+      await dev.readApps();
+    }
+    const known = dev.apps.filter((p) => import_util.AUTOMATION_APPS[p]);
+    const rest = dev.apps.filter((p) => !import_util.AUTOMATION_APPS[p]);
+    for (const p of known) {
+      list.push({ value: p, label: `${import_util.AUTOMATION_APPS[p]} (${p})`, noTranslation: true });
+    }
+    for (const p of rest) {
+      list.push({ value: p, label: p, noTranslation: true });
+    }
+    return list;
   }
   /**
    * Allows installed automation apps to write secure settings, so they can switch
