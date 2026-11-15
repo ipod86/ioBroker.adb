@@ -10,7 +10,10 @@ Steuert Android-Geräte – Handys, Tablets, TV-Boxen, Android TV – über die 
 
 ## Highlights
 
-- **Kabelloses Debugging (ab Android 11):** einmal koppeln, per 6-stelligem Kopplungscode oder per QR-Code direkt in den Adapter-Einstellungen. Der Verbindungs-Port des kabellosen Debuggings ändert sich bei jedem Einschalten – der Adapter findet den aktuellen Port selbst im Netzwerk und verbindet sich neu.
+- **Kabelloses Debugging (ab Android 11):** einmal koppeln – per 6-stelligem Kopplungscode oder per QR-Code, der direkt in den Adapter-Einstellungen angezeigt wird. Kein USB-Kabel, kein fester Port.
+- **Wechselnde Ports werden automatisch gefunden:** Der Verbindungs-Port des kabellosen Debuggings ändert sich bei jedem Einschalten (Neustart, WLAN neu verbunden). Der Adapter findet den aktuellen Port im Netzwerk (mDNS) und verbindet sich selbst neu.
+- **Bleibt nach einem Neustart verbunden:** Ein Knopf erlaubt einer Automatisierungs-App (Tasker, MacroDroid, Automate), kabelloses Debugging nach jedem Start wieder einzuschalten – siehe [Nach einem Neustart verbunden bleiben](#nach-einem-neustart-verbunden-bleiben).
+- **Debugging-Benachrichtigung ausblenden:** Ein Schalter pro Handy blendet die dauerhafte Meldung „Kabelloses Debugging verbunden“ aus.
 - **Fester Port** für TV-Boxen und Geräte, die mit `adb tcpip 5555` umgestellt sind, wie bisher.
 - **Automatisches Wiederverbinden**, wenn ein Gerät aus, im Ruhezustand oder nicht im Netz war.
 - **Befehle:** Shell-Befehl mit Antwort, Taste senden, Apps starten und beenden, Neustart, Bildschirmfoto.
@@ -21,23 +24,61 @@ Steuert Android-Geräte – Handys, Tablets, TV-Boxen, Android TV – über die 
 
 - Das Programm `adb` auf dem ioBroker-Rechner (oder einem anderen Rechner mit adb-Server). Debian/Ubuntu: `sudo apt install adb`. **Zum Koppeln ist adb ab Version 30 nötig** (`adb version`).
 - Läuft der adb-Server auf demselben Rechner, startet der Adapter ihn selbst.
-- Für kabelloses Debugging muss das Gerät im selben Netzwerk wie der adb-Server sein, weil der Port per mDNS gefunden wird.
+- Für kabelloses Debugging muss das Gerät im selben Netzwerk wie der adb-Server sein (nicht in einem getrennten Gast-WLAN oder VLAN), weil Koppeln und Port-Suche über mDNS laufen.
 - Koppeln per QR-Code braucht einen aktuellen Admin (ab 8.3). Koppeln per Code geht mit jedem Admin.
 
 ## Einrichtung
 
 ### Ab Android 11 (kabelloses Debugging)
 
-1. Auf dem Gerät: **Einstellungen → Telefoninfo → Softwareinformationen → 7 × auf „Buildnummer“ tippen**, damit die Entwickleroptionen erscheinen.
-2. **Einstellungen → Entwickleroptionen → Kabelloses Debugging** → einschalten.
-3. In den Adapter-Einstellungen im Reiter **Koppeln** einen Weg wählen:
-   - **Kopplungscode:** Auf dem Gerät *Gerät über einen Kopplungscode koppeln* antippen. IP-Adresse und 6-stelligen Code eintragen und **Koppeln** drücken. Der Kopplungs-Port darf leer bleiben, solange der Dialog auf dem Gerät offen ist.
-   - **QR-Code:** **QR-Code anzeigen** drücken, dann **Auf das Gerät warten**. Auf dem Gerät *Gerät über einen QR-Code koppeln* antippen und scannen.
-4. Das Gerät wird mit leerem Port (= automatisch) in die Geräteliste eingetragen. Einstellungen speichern.
+**Einmalig am Gerät:**
+
+1. **Einstellungen → Telefoninfo (Samsung: → Softwareinformationen) → 7 × auf „Buildnummer“ tippen** – die Entwickleroptionen erscheinen.
+2. **Einstellungen → Entwickleroptionen → Kabelloses Debugging** → einschalten und die Frage zum aktuellen WLAN bestätigen.
+
+Dann in den Adapter-Einstellungen im Reiter **Koppeln** auf einem von zwei Wegen koppeln.
+
+#### Koppeln per QR-Code
+
+1. **QR-Code anzeigen** drücken.
+2. Am Gerät: **Kabelloses Debugging → Gerät über einen QR-Code koppeln** und den Code am Bildschirm scannen.
+3. Fertig – das Gerät meldet „gekoppelt“, der Adapter trägt es in die Geräteliste ein (Port leer = automatisch) und verbindet sich.
+
+So funktioniert es: Der QR-Code enthält **keine** WLAN-Zugangsdaten, auch wenn er mit `WIFI:` beginnt. Es ist das Format, das Android für das adb-Koppeln vorgibt (`WIFI:T:ADB;S:<Name>;P:<Kennwort>;;`), und es transportiert nur einen Namen und ein Einmal-Kennwort. Nach dem Scannen öffnet das Handy in deinem normalen Netz einen Kopplungs-Port und meldet sich per mDNS unter diesem Namen. Der Adapter erkennt den Namen, verbindet sich mit dem Handy, und beide prüfen das Kennwort. Danach haben sie dauerhafte Schlüssel ausgetauscht – es wird kein WLAN aufgebaut, und nichts verlässt dein Netz.
+
+Den Code mit dem Scanner unter **Kabelloses Debugging** scannen, nicht mit der Kamera-App – die Kamera sieht nur einen „WLAN“-Code. Der Adapter wartet nach dem Anzeigen bis zu 10 Minuten; du darfst beim Scannen den Tab wechseln oder den Browser minimieren. **Auf das Gerät warten** zeigt nur das Ergebnis an.
+
+#### Koppeln per Kopplungscode
+
+1. Am Gerät: **Kabelloses Debugging → Gerät über einen Kopplungscode koppeln**. Der Dialog zeigt einen 6-stelligen Code und eine Adresse wie `192.168.1.20:37845`.
+2. Im Adapter: IP-Adresse und Code eintragen und **Koppeln** drücken. Der Kopplungs-Port darf leer bleiben, solange der Dialog am Gerät offen ist – der Adapter findet ihn selbst.
+3. Das Gerät wird in die Geräteliste eingetragen. Einstellungen speichern.
 
 Gekoppelt wird nur einmal. Danach verbindet sich der Adapter von selbst wieder – auch nach einem Neustart oder mit neuem Port –, sobald kabelloses Debugging eingeschaltet ist.
 
-**Hinweis:** Viele Geräte schalten kabelloses Debugging nach einem Neustart oder beim Verlassen des WLANs aus. Dann muss es auf dem Gerät wieder eingeschaltet werden; neu koppeln ist nicht nötig.
+### Nach einem Neustart verbunden bleiben
+
+Android schaltet kabelloses Debugging bei jedem Neustart aus und oft auch, wenn das Handy das WLAN verlässt. Die Kopplung bleibt, aber kabelloses Debugging muss wieder eingeschaltet werden. Das kann eine Automatisierungs-App selbst erledigen – sie braucht dafür nur eine Berechtigung, die normale Apps nicht bekommen und die sich nur per adb vergeben lässt:
+
+1. Eine Automatisierungs-App auf dem Gerät installieren, z. B. **Tasker**, **MacroDroid** oder **Automate**.
+2. In den Adapter-Einstellungen in der Geräteliste in der Zeile des Geräts **Automatisierungs-App erlauben** drücken. Der Adapter findet die App auf dem Gerät und gibt ihr die Berechtigung `WRITE_SECURE_SETTINGS`. Für eine andere App vorher deren Paketnamen in **App für Neustart** eintragen.
+3. In der App eine Regel anlegen, die die globale Einstellung `adb_wifi_enabled` auf `1` setzt.
+
+**Beispiel für Tasker:**
+
+1. Reiter **Profile** → **+** → **Ereignis** → **System** → **Gerät gebootet** (Suche: „boot“).
+2. Zurück → **Neue Aufgabe** → Name z. B. „adb WLAN an“.
+3. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert `1`. Mit ▶ testen.
+4. Optional ein zweites Profil: **Zustand** → **Netz** → **WLAN verbunden** (dein Heimnetz) mit derselben Aufgabe – für das Heimkommen.
+5. Bei Samsung: **Einstellungen → Apps → Tasker → Akku → Nicht eingeschränkt**, sonst startet Tasker nach dem Booten eventuell nicht.
+
+Etwa 30–60 Sekunden nach dem Hochfahren ist der Adapter wieder verbunden – mit dem neuen Port.
+
+Hinweis: Kabelloses Debugging ist dann in deinem Heimnetz ständig an. Verbinden können sich nur gekoppelte Geräte; ein neues Gerät müsste erst koppeln, und dafür braucht es den Code oder QR-Code, den nur das Handy anzeigt.
+
+### Debugging-Benachrichtigung ausblenden
+
+Solange eine Verbindung besteht, zeigt Android dauerhaft die Benachrichtigung „Kabelloses Debugging verbunden“. Sie gehört zu Android selbst und lässt sich in den Einstellungen nicht abschalten. Den Datenpunkt `hideNotification` des Geräts auf `true` setzen: Der Adapter schlummert die Benachrichtigung für die längste Zeit, die Android erlaubt, wiederholt das nach jeder Verbindung und erneuert es regelmäßig. `false` zeigt sie wieder an.
 
 ### TV-Boxen und fester Port
 
@@ -62,12 +103,13 @@ Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei fest
 | `reboot` | Taste: Gerät neu starten |
 | `screencap` | Taste: Bildschirmfoto aufnehmen |
 | `result` | Antwort des letzten Befehls oder `error: …` |
+| `hideNotification` | nur kabellose Geräte: `true` blendet die Meldung „Kabelloses Debugging verbunden“ aus |
 
 Bildschirmfotos werden als Dateien des Adapters gespeichert: `/adb.0/<Geräte-ID>.png` und wie bisher `/adb.0/screenshot.png` (immer das letzte). In vis lassen sie sich mit der URL `/files/adb.0/<Geräte-ID>.png` anzeigen.
 
 ## Update von 0.0.x
 
-Geräte mit Port behalten ihre Datenpunkte und IDs. Die bisherigen Einstellungen werden übernommen. Neu sind die Datenpunkte `status`, `port`, `model`, `androidVersion` und `keyevent`.
+Geräte mit Port behalten ihre Datenpunkte und IDs. Die bisherigen Einstellungen werden übernommen. Neu sind die Datenpunkte `status`, `port`, `model`, `androidVersion`, `keyevent` und – bei kabellosen Geräten – `hideNotification`.
 
 ## Changelog
 
