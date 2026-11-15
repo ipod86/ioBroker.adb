@@ -9,6 +9,8 @@ export interface DeviceConfig {
 	ip: string;
 	/** Fixed port, or empty for wireless debugging with changing ports */
 	port: string | number;
+	/** Package name of the automation app that switches wireless debugging on after a reboot */
+	automationApp?: string;
 }
 
 /**
@@ -184,4 +186,13 @@ export function parsePackages(output: string): string[] {
 		.split(/\r?\n/)
 		.map(l => l.trim().replace(/^package:/, ''))
 		.filter(Boolean);
+}
+
+/**
+ * Checks an Android package name.
+ *
+ * @param pkg package name
+ */
+export function isPackageName(pkg: string): boolean {
+	return /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/.test(pkg);
 }

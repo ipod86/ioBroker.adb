@@ -24,6 +24,7 @@ __export(util_exports, {
   deviceObjectId: () => deviceObjectId,
   extractPng: () => extractPng,
   hostOfSerial: () => hostOfSerial,
+  isPackageName: () => isPackageName,
   isValidPairingCode: () => isValidPairingCode,
   normalizePairingCode: () => normalizePairingCode,
   pairSucceeded: () => pairSucceeded,
@@ -115,6 +116,9 @@ const AUTOMATION_APPS = {
 function parsePackages(output) {
   return output.split(/\r?\n/).map((l) => l.trim().replace(/^package:/, "")).filter(Boolean);
 }
+function isPackageName(pkg) {
+  return /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/.test(pkg);
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AUTOMATION_APPS,
@@ -123,6 +127,7 @@ function parsePackages(output) {
   deviceObjectId,
   extractPng,
   hostOfSerial,
+  isPackageName,
   isValidPairingCode,
   normalizePairingCode,
   pairSucceeded,

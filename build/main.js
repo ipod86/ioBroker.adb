@@ -202,6 +202,9 @@ class AdbAdapter extends utils.Adapter {
         case "discover":
           answer = await this.discover(msg);
           break;
+        case "listApps":
+          this.sendTo(obj.from, obj.command, await this.listApps(msg), obj.callback);
+          return;
         case "grantAutomation":
           answer = await this.grantAutomation(msg);
           break;
@@ -363,21 +366,55 @@ class AdbAdapter extends utils.Adapter {
     };
   }
   /**
+   * Apps installed on a device, for the app selection in the device list. Known automation apps come first.
+   *
+   * @param msg ip of the device
+   */
+  async listApps(msg) {
+    const ip = typeof msg.ip === "string" ? msg.ip.trim() : "";
+    const dev = this.devices.find((d) => d.ip === ip);
+    if (!dev || !dev.connected) {
+      return [];
+    }
+    try {
+      const pkgs = (0, import_util.parsePackages)(await dev.run("pm list packages -3")).sort();
+      const known = pkgs.filter((p) => import_util.AUTOMATION_APPS[p]);
+      const rest = pkgs.filter((p) => !import_util.AUTOMATION_APPS[p]);
+      return [
+        ...known.map((p) => ({ value: p, label: `${import_util.AUTOMATION_APPS[p]} (${p})`, noTranslation: true })),
+        ...rest.map((p) => ({ value: p, label: p, noTranslation: true }))
+      ];
+    } catch (e) {
+      this.log.debug(`listApps ${ip}: ${(0, import_device.errorText)(e)}`);
+      return [];
+    }
+  }
+  /**
    * Allows installed automation apps to write secure settings, so they can switch
    * wireless debugging on again after a reboot (`settings put global adb_wifi_enabled 1`).
    *
    * @param msg ip of the device
    */
   async grantAutomation(msg) {
+    var _a;
     const ip = typeof msg.ip === "string" ? msg.ip.trim() : "";
     const dev = this.devices.find((d) => d.ip === ip);
     if (!dev) {
       return { error: "Save the settings first, then try again" };
     }
-    const installed = (0, import_util.parsePackages)(await dev.run("pm list packages"));
-    const apps = Object.keys(import_util.AUTOMATION_APPS).filter((p) => installed.includes(p));
-    if (!apps.length) {
-      return { result: "noAutomationApp", args: [Object.values(import_util.AUTOMATION_APPS).slice(0, 3).join(", ")] };
+    const chosen = typeof msg.app === "string" ? msg.app.trim() : "";
+    let apps;
+    if (chosen) {
+      if (!(0, import_util.isPackageName)(chosen)) {
+        return { error: "This is not a valid package name" };
+      }
+      apps = [chosen];
+    } else {
+      const installed = (0, import_util.parsePackages)(await dev.run("pm list packages"));
+      apps = Object.keys(import_util.AUTOMATION_APPS).filter((p) => installed.includes(p));
+      if (!apps.length) {
+        return { result: "noAutomationApp", args: [Object.values(import_util.AUTOMATION_APPS).join(", ")] };
+      }
     }
     const done = [];
     for (const pkg of apps) {
@@ -385,7 +422,7 @@ class AdbAdapter extends utils.Adapter {
       if (out) {
         this.log.warn(`${dev.label}: granting ${pkg} failed: ${out}`);
       } else {
-        done.push(import_util.AUTOMATION_APPS[pkg]);
+        done.push((_a = import_util.AUTOMATION_APPS[pkg]) != null ? _a : pkg);
       }
     }
     if (!done.length) {

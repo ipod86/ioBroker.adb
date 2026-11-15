@@ -30,21 +30,21 @@
 							"type": "checkbox",
 							"attr": "enabled",
 							"title": "Active",
-							"width": "8%",
+							"width": "6%",
 							"default": true
 						},
 						{
 							"type": "text",
 							"attr": "name",
 							"title": "Name",
-							"width": "24%",
+							"width": "18%",
 							"default": ""
 						},
 						{
 							"type": "text",
 							"attr": "ip",
 							"title": "IP address",
-							"width": "22%",
+							"width": "16%",
 							"default": "",
 							"validator": "data.ip && data.ip.trim() !== ''",
 							"validatorNoSaveOnError": true,
@@ -54,19 +54,33 @@
 							"type": "text",
 							"attr": "port",
 							"title": "Port (empty = automatic)",
-							"width": "20%",
+							"width": "14%",
 							"default": "",
 							"validator": "!data.port || /^\\d{1,5}$/.test(String(data.port).trim())",
 							"validatorErrorText": "Only digits, or leave empty"
 						},
 						{
+							"type": "autocompleteSendTo",
+							"attr": "automationApp",
+							"title": "App for reboot (optional)",
+							"width": "24%",
+							"command": "listApps",
+							"jsonData": "{\"ip\": \"${data.ip}\"}",
+							"freeSolo": true,
+							"default": "",
+							"alsoDependsOn": [
+								"ip"
+							],
+							"disabled": "!!data.port"
+						},
+						{
 							"type": "sendTo",
 							"attr": "_grant",
 							"title": "Stay connected after reboot",
-							"width": "26%",
+							"width": "22%",
 							"label": "Allow automation app",
 							"command": "grantAutomation",
-							"jsonData": "{\"ip\": \"${data.ip}\"}",
+							"jsonData": "{\"ip\": \"${data.ip}\", \"app\": \"${data.automationApp || ''}\"}",
 							"variant": "outlined",
 							"showProcess": true,
 							"timeout": 30000,
@@ -80,7 +94,7 @@
 				},
 				"automationHint": {
 					"type": "staticText",
-					"text": "Android switches wireless debugging off at every reboot. \"Allow automation app\" lets MacroDroid, Tasker or Automate on the device switch it on again by itself (needs a connected device; only for devices with automatic port).",
+					"text": "Android switches wireless debugging off at every reboot. An automation app on the device (e.g. MacroDroid, Tasker, Automate) can switch it on again by itself. Choose the app in \"App for reboot\" – the list shows the apps installed on the connected device, or type the package name – and press \"Allow automation app\". Empty = the adapter looks for MacroDroid, Tasker or Automate itself. Only for devices with automatic port.",
 					"newLine": true,
 					"xs": 12,
 					"sm": 12,
