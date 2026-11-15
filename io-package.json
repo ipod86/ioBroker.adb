@@ -3,18 +3,32 @@
         "name": "adb",
         "version": "0.0.7",
         "news": {
-			"0.0.7": {
-				"en": "Add meta object for fix screenshot.",
-				"de": "Fügen Sie Meta-Objekt für Fix Screenshot hinzu",
-				"ru": "Добавлен meta-объект для исправдления скриншота.",
-				"pt": "Adicionar meta-objeto para corrigir a captura de tela",
-				"nl": "Voeg meta-object toe",
-				"fr": "Ajouter meta-object pour fixer screenshot",
-				"it": "Aggiungi meta-oggetti per fissare screenshot",
-				"es": "Añadir meta-objeto para fijar captura de pantalla",
-				"pl": "Add metaobject for fix screenshot screenshot",
-				"zh-cn": "九. 包围屏幕的代用品"
-			},
+            "0.1.0": {
+                "en": "Wireless debugging (Android 11+): pair with code or QR code, changing ports are found automatically\nNew settings page, automatic reconnect, new states: status, port, model, Android version, key event\nModernized for current ioBroker and Node.js versions",
+                "de": "Kabelloses Debugging (Android 11+): Koppeln per Code oder QR-Code, wechselnde Ports werden automatisch gefunden\nNeue Einstellungsseite, automatisches Wiederverbinden, neue Datenpunkte: Status, Port, Modell, Android-Version, Taste senden\nFür aktuelle ioBroker- und Node.js-Versionen modernisiert",
+                "ru": "Беспроводная отладка (Android 11+): сопряжение по коду или QR-коду, меняющиеся порты находятся автоматически\nНовая страница настроек, автоматическое переподключение, новые состояния: статус, порт, модель, версия Android, нажатие клавиши\nМодернизировано для текущих версий ioBroker и Node.js",
+                "pt": "Depuração sem fio (Android 11+): parear com código ou código QR, portas variáveis são encontradas automaticamente\nNova página de configurações, reconexão automática, novos estados: status, porta, modelo, versão do Android, evento de tecla\nModernizado para as versões atuais do ioBroker e Node.js",
+                "nl": "Draadloze foutopsporing (Android 11+): koppelen met code of QR-code, wisselende poorten worden automatisch gevonden\nNieuwe instellingenpagina, automatisch opnieuw verbinden, nieuwe states: status, poort, model, Android-versie, toets sturen\nGemoderniseerd voor huidige ioBroker- en Node.js-versies",
+                "fr": "Débogage sans fil (Android 11+) : association par code ou code QR, les ports changeants sont trouvés automatiquement\nNouvelle page de paramètres, reconnexion automatique, nouveaux états : statut, port, modèle, version Android, touche\nModernisé pour les versions actuelles d'ioBroker et de Node.js",
+                "it": "Debug wireless (Android 11+): associazione con codice o codice QR, le porte che cambiano vengono trovate automaticamente\nNuova pagina delle impostazioni, riconnessione automatica, nuovi stati: stato, porta, modello, versione Android, tasto\nModernizzato per le versioni attuali di ioBroker e Node.js",
+                "es": "Depuración inalámbrica (Android 11+): vincular con código o código QR, los puertos cambiantes se encuentran automáticamente\nNueva página de ajustes, reconexión automática, nuevos estados: estado, puerto, modelo, versión de Android, tecla\nModernizado para las versiones actuales de ioBroker y Node.js",
+                "pl": "Debugowanie bezprzewodowe (Android 11+): parowanie kodem lub kodem QR, zmieniające się porty są wyszukiwane automatycznie\nNowa strona ustawień, automatyczne ponowne łączenie, nowe stany: status, port, model, wersja Androida, klawisz\nZmodernizowano dla aktualnych wersji ioBroker i Node.js",
+                "uk": "Бездротове налагодження (Android 11+): спарювання за кодом або QR-кодом, змінні порти знаходяться автоматично\nНова сторінка налаштувань, автоматичне перепідключення, нові стани: статус, порт, модель, версія Android, клавіша\nМодернізовано для поточних версій ioBroker і Node.js",
+                "zh-cn": "无线调试（Android 11+）：使用配对码或二维码配对，自动查找变化的端口\n新的设置页面，自动重新连接，新状态：状态、端口、型号、Android 版本、按键\n针对当前 ioBroker 和 Node.js 版本进行了现代化"
+            },
+            "0.0.7": {
+                "en": "Add meta object for fix screenshot.",
+                "de": "Fügen Sie Meta-Objekt für Fix Screenshot hinzu",
+                "ru": "Добавлен meta-объект для исправдления скриншота.",
+                "pt": "Adicionar meta-objeto para corrigir a captura de tela",
+                "nl": "Voeg meta-object toe",
+                "fr": "Ajouter meta-object pour fixer screenshot",
+                "it": "Aggiungi meta-oggetti per fissare screenshot",
+                "es": "Añadir meta-objeto para fijar captura de pantalla",
+                "pl": "Add metaobject for fix screenshot screenshot",
+                "uk": "Add meta object for fix screenshot.",
+                "zh-cn": "九. 包围屏幕的代用品"
+            },
             "0.0.6": {
                 "en": "Add delete and up/down buttons in device list.\nReplace dependency 'adbkit'. Active development has been moved to DeviceFarmer organisation.\nAdd wait for device after connection.",
                 "de": "Hinzufügen von Lösch- und Auf-/Abschalttasten in der Geräteliste.\nErsetzen Abhängigkeit adbkit. Die aktive Entwicklung wurde in die Organisation von DeviceFarmer verschoben.\nAdd warte nach der Verbindung auf das Gerät.",
@@ -25,20 +39,22 @@
                 "it": "Aggiungi pulsanti delete and up/down nell'elenco dei dispositivi.\nSostituisci adbkit dipendenza. Lo sviluppo attivo è stato spostato all'organizzazione DeviceFarmer.\nAdd attendere il dispositivo dopo la connessione.",
                 "es": "Añadir botones de borrado y arriba / abajo en la lista de dispositivos.\nReemplazar adbkit dependencia. Desarrollo activo se ha movido a la organización DeviceFarmer.\nAdd espera para el dispositivo después de la conexión.",
                 "pl": "Add delete and up/down buttons in device list.\nReplace dependency adbkit. Prace nad programem zostały przeniesione do DeviceFarmer.\nAdd czekającego na urządzenie po połączeniu.",
+                "uk": "Add delete and up/down buttons in device list.\nReplace dependency 'adbkit'. Active development has been moved to DeviceFarmer organisation.\nAdd wait for device after connection.",
                 "zh-cn": "在装置清单中删除和降解/降水、排他性。 积极发展已转移到DeviceFarmer组织,然后再等待装置。."
             },
-			"0.0.5": {
-				"en": "js-controller dependency upgraded to > 2.0.0",
-				"de": "js-controller-abhängigkeit auf> 2.0.0 aktualisiert",
-				"ru": "зависимость js-controller обновлена до> 2.0.0",
-				"pt": "Dependência do js-controller atualizada para> 2.0.0",
-				"nl": "js-controller afhankelijkheid geüpgraded naar> 2.0.0",
-				"fr": "Dépendance js-controller mise à niveau vers> 2.0.0",
-				"it": "dipendenza js-controller aggiornata a> 2.0.0",
-				"es": "Dependencia js-controller actualizada a> 2.0.0",
-				"pl": "Zależność kontrolera js zaktualizowana do> 2.0.0",
-				"zh-cn": "js-controller依赖关系已升级到> 2.0.0"
-			},
+            "0.0.5": {
+                "en": "js-controller dependency upgraded to > 2.0.0",
+                "de": "js-controller-abhängigkeit auf> 2.0.0 aktualisiert",
+                "ru": "зависимость js-controller обновлена до> 2.0.0",
+                "pt": "Dependência do js-controller atualizada para> 2.0.0",
+                "nl": "js-controller afhankelijkheid geüpgraded naar> 2.0.0",
+                "fr": "Dépendance js-controller mise à niveau vers> 2.0.0",
+                "it": "dipendenza js-controller aggiornata a> 2.0.0",
+                "es": "Dependencia js-controller actualizada a> 2.0.0",
+                "pl": "Zależność kontrolera js zaktualizowana do> 2.0.0",
+                "uk": "js-controller dependency upgraded to > 2.0.0",
+                "zh-cn": "js-controller依赖关系已升级到> 2.0.0"
+            },
             "0.0.3": {
                 "en": "fixes ater review",
                 "de": "behebt nach Überprüfung",
@@ -49,6 +65,7 @@
                 "it": "correzioni dopo la revisione",
                 "es": "repara una revisión",
                 "pl": "naprawia przegląd ater",
+                "uk": "fixes ater review",
                 "zh-cn": "修复审核"
             },
             "0.0.2": {
@@ -61,6 +78,7 @@
                 "it": "aggiungi comandi: avvia / interrompi applicazione, riavvia il dispositivo, fai screenshot",
                 "es": "agregar comandos: iniciar / detener la aplicación, reiniciar el dispositivo, tomar captura de pantalla",
                 "pl": "dodaj polecenia: uruchom / zatrzymaj aplikację, uruchom ponownie urządzenie, zrób zrzut ekranu",
+                "uk": "add commands: start/stopp application, reboot device, take screenshot",
                 "zh-cn": "添加命令：启动/停止应用程序，重启设备，截图"
             },
             "0.0.1": {
@@ -73,10 +91,10 @@
                 "it": "Versione iniziale",
                 "es": "Versión inicial",
                 "pl": "Pierwsze wydanie",
+                "uk": "initial release",
                 "zh-cn": "首次出版"
             }
         },
-        "title": "Android Debug Bridge",
         "titleLang": {
             "en": "Android Debug Bridge",
             "de": "Android Debug Bridge",
@@ -87,51 +105,72 @@
             "it": "Android Debug Bridge",
             "es": "Puente de depuración de Android",
             "pl": "Android Debug Bridge",
+            "uk": "Android Debug Bridge",
             "zh-cn": "Android调试桥"
         },
         "desc": {
-            "en": "Android Debug Bridge",
-            "de": "Android Debug Bridge",
-            "ru": "Android Debug Bridge",
-            "pt": "Ponte de depuração do Android",
-            "nl": "Android Debug Bridge",
-            "fr": "Pont de débogage Android",
-            "it": "Android Debug Bridge",
-            "es": "Puente de depuración de Android",
-            "pl": "Android Debug Bridge",
-            "zh-cn": "Android调试桥"
+            "en": "Control Android devices (phones, tablets, TV boxes) via Android Debug Bridge, including wireless debugging with pairing code or QR code",
+            "de": "Android-Geräte (Handys, Tablets, TV-Boxen) per Android Debug Bridge steuern, auch per kabellosem Debugging mit Kopplungscode oder QR-Code",
+            "ru": "Управление устройствами Android (телефоны, планшеты, ТВ-приставки) через Android Debug Bridge, включая беспроводную отладку с кодом сопряжения или QR-кодом",
+            "pt": "Controle dispositivos Android (telefones, tablets, TV boxes) via Android Debug Bridge, incluindo depuração sem fio com código de pareamento ou código QR",
+            "nl": "Android-apparaten (telefoons, tablets, tv-boxen) bedienen via Android Debug Bridge, ook draadloze foutopsporing met koppelcode of QR-code",
+            "fr": "Contrôler des appareils Android (téléphones, tablettes, box TV) via Android Debug Bridge, y compris le débogage sans fil avec code d'association ou code QR",
+            "it": "Controlla dispositivi Android (telefoni, tablet, TV box) tramite Android Debug Bridge, incluso il debug wireless con codice di associazione o codice QR",
+            "es": "Controla dispositivos Android (teléfonos, tabletas, TV boxes) mediante Android Debug Bridge, incluida la depuración inalámbrica con código de vinculación o código QR",
+            "pl": "Sterowanie urządzeniami Android (telefony, tablety, przystawki TV) przez Android Debug Bridge, także debugowanie bezprzewodowe z kodem parowania lub kodem QR",
+            "uk": "Керування пристроями Android (телефони, планшети, ТВ-приставки) через Android Debug Bridge, включно з бездротовим налагодженням за кодом спарювання або QR-кодом",
+            "zh-cn": "通过 Android 调试桥控制 Android 设备（手机、平板、电视盒），支持使用配对码或二维码的无线调试"
         },
         "authors": [
-            "om2804 <om2804@mail.ru>"
+            "om2804 <om2804@mail.ru>",
+            "ipod86 <david@graef.email>"
         ],
         "keywords": [
-            "ioBroker",
             "adb",
-            "android"
+            "android",
+            "android debug bridge",
+            "wireless debugging",
+            "android tv",
+            "fire tv",
+            "tv box",
+            "screenshot"
         ],
-        "license": "MIT",
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
         "platform": "Javascript/Node.js",
-        "main": "main.js",
         "icon": "adb.png",
         "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/om2804/ioBroker.adb/master/admin/adb.png",
-        "readme": "https://github.com/om2804/ioBroker.adb/blob/master/README.md",
+        "extIcon": "https://raw.githubusercontent.com/ipod86/ioBroker.adb/master/admin/adb.png",
+        "readme": "https://github.com/ipod86/ioBroker.adb/blob/master/README.md",
         "loglevel": "info",
+        "tier": 3,
         "mode": "daemon",
         "type": "hardware",
-		"connectionType": "local",
-		"dataSource": "push",
         "compact": true,
-        "materialize": true,
+        "connectionType": "local",
+        "dataSource": "push",
+        "messagebox": true,
+        "adminUI": {
+            "config": "json"
+        },
         "dependencies": [
             {
-                "js-controller": ">=2.0.0"
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.6.20"
             }
         ]
     },
     "native": {
-        "adbHostOption": "localhost",
+        "adbHostOption": "127.0.0.1",
         "adbPortOption": "5037",
+        "adbPath": "",
+        "reconnectInterval": 30,
         "devices": []
     },
     "objects": [],
@@ -140,7 +179,10 @@
             "_id": "info",
             "type": "channel",
             "common": {
-                "name": "Information"
+                "name": {
+                    "en": "Information",
+                    "de": "Informationen"
+                }
             },
             "native": {}
         },
@@ -149,7 +191,10 @@
             "type": "state",
             "common": {
                 "role": "indicator.connected",
-                "name": "Device or service connected",
+                "name": {
+                    "en": "Connected to adb server",
+                    "de": "Mit adb-Server verbunden"
+                },
                 "type": "boolean",
                 "read": true,
                 "write": false,
@@ -157,14 +202,17 @@
             },
             "native": {}
         },
-		{
-		  "_id": "",
-		  "type": "meta",
-		  "common": {
-			"name": "Screenshot from device",
-			"type": "meta"
-		  },
-		  "native": {}
-		}
+        {
+            "_id": "",
+            "type": "meta",
+            "common": {
+                "name": {
+                    "en": "Screenshots of the devices",
+                    "de": "Bildschirmfotos der Geräte"
+                },
+                "type": "meta.user"
+            },
+            "native": {}
+        }
     ]
 }

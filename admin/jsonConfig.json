@@ -1,0 +1,276 @@
+{
+	"i18n": true,
+	"type": "tabs",
+	"items": {
+		"tabDevices": {
+			"type": "panel",
+			"label": "Devices",
+			"items": {
+				"devicesIntro": {
+					"type": "staticText",
+					"text": "Enter each Android device with its IP address. Leave the port empty for phones and tablets with Android 11 or newer (wireless debugging): the adapter then finds the port itself, even after it changes. Pair such devices once on the \"Pair\" tab. TV boxes and devices switched to a fixed port with \"adb tcpip 5555\" get their port entered here.",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12
+				},
+				"devices": {
+					"type": "table",
+					"label": "Devices",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"noDelete": false,
+					"showFirstAddOnTop": true,
+					"items": [
+						{
+							"type": "checkbox",
+							"attr": "enabled",
+							"title": "Active",
+							"width": "10%",
+							"default": true
+						},
+						{
+							"type": "text",
+							"attr": "name",
+							"title": "Name",
+							"width": "30%",
+							"default": ""
+						},
+						{
+							"type": "text",
+							"attr": "ip",
+							"title": "IP address",
+							"width": "30%",
+							"default": "",
+							"validator": "data.ip && data.ip.trim() !== ''",
+							"validatorNoSaveOnError": true,
+							"validatorErrorText": "Enter the IP address"
+						},
+						{
+							"type": "text",
+							"attr": "port",
+							"title": "Port (empty = automatic)",
+							"width": "30%",
+							"default": "",
+							"validator": "!data.port || /^\\d{1,5}$/.test(String(data.port).trim())",
+							"validatorErrorText": "Only digits, or leave empty"
+						}
+					]
+				},
+				"discover": {
+					"type": "sendTo",
+					"label": "Search the network for devices with wireless debugging",
+					"command": "discover",
+					"variant": "outlined",
+					"icon": "search",
+					"showProcess": true,
+					"timeout": 15000,
+					"newLine": true,
+					"xs": 12,
+					"sm": 12,
+					"md": 8,
+					"lg": 6,
+					"xl": 6,
+					"result": {
+						"found": "Found in the network:\n%s",
+						"noneFound": "No device found. Is wireless debugging switched on and the device in the same network?"
+					}
+				}
+			}
+		},
+		"tabPair": {
+			"type": "panel",
+			"label": "Pair",
+			"items": {
+				"pairIntro": {
+					"type": "staticText",
+					"text": "Android 11 and newer: pair each device once. On the device: Settings → Developer options → Wireless debugging → switch on. Then choose one of the two ways below. Pairing is remembered; the device is connected again automatically later, even if its port changes.",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12
+				},
+				"hdrCode": {
+					"type": "header",
+					"text": "Pair with pairing code",
+					"size": 4,
+					"newLine": true
+				},
+				"codeSteps": {
+					"type": "staticText",
+					"text": "On the device tap \"Pair device with pairing code\". Enter the IP address and the 6-digit code shown there. The port can stay empty while the dialog is open.",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12
+				},
+				"pairIp": {
+					"type": "text",
+					"label": "IP address",
+					"doNotSave": true,
+					"newLine": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 4,
+					"lg": 3,
+					"xl": 3
+				},
+				"pairPort": {
+					"type": "text",
+					"label": "Pairing port (optional)",
+					"doNotSave": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 3,
+					"lg": 2,
+					"xl": 2
+				},
+				"pairCode": {
+					"type": "text",
+					"label": "Pairing code",
+					"doNotSave": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 3,
+					"lg": 2,
+					"xl": 2
+				},
+				"pairButton": {
+					"type": "sendTo",
+					"label": "Pair",
+					"command": "pair",
+					"jsonData": "{\"ip\": \"${data.pairIp}\", \"port\": \"${data.pairPort}\", \"code\": \"${data.pairCode}\", \"devices\": ${JSON.stringify(data.devices || [])}}",
+					"variant": "contained",
+					"icon": "auth",
+					"showProcess": true,
+					"timeout": 45000,
+					"useNative": true,
+					"disabled": "!data.pairIp || !data.pairCode",
+					"xs": 12,
+					"sm": 6,
+					"md": 2,
+					"lg": 2,
+					"xl": 2,
+					"result": {
+						"paired": "Paired with %s. The device will be connected within a few seconds.",
+						"pairedAdded": "Paired with %s and added to the device list. Please save the settings."
+					}
+				},
+				"hdrQr": {
+					"type": "header",
+					"text": "Pair with QR code",
+					"size": 4,
+					"newLine": true
+				},
+				"qrSteps": {
+					"type": "staticText",
+					"text": "Show the QR code, then tap \"Wait for the device\". On the device tap \"Pair device with QR code\" and scan it. The device is added to the list by itself.",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12
+				},
+				"qr": {
+					"type": "qrCodeSendTo",
+					"command": "qrCode",
+					"sendFirstByClick": "Show QR code",
+					"size": 220,
+					"newLine": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 4,
+					"lg": 3,
+					"xl": 3
+				},
+				"qrPair": {
+					"type": "sendTo",
+					"label": "Wait for the device (60 s)",
+					"command": "qrPair",
+					"jsonData": "{\"devices\": ${JSON.stringify(data.devices || [])}}",
+					"variant": "contained",
+					"icon": "auth",
+					"showProcess": true,
+					"timeout": 75000,
+					"useNative": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 4,
+					"lg": 3,
+					"xl": 3,
+					"result": {
+						"paired": "Paired with %s. The device will be connected within a few seconds.",
+						"pairedAdded": "Paired with %s and added to the device list. Please save the settings."
+					}
+				}
+			}
+		},
+		"tabServer": {
+			"type": "panel",
+			"label": "adb server",
+			"items": {
+				"serverIntro": {
+					"type": "staticText",
+					"text": "The adapter uses the adb program. On Debian/Ubuntu install it with \"sudo apt install adb\" (version 30 or newer is needed for pairing). If the adb server runs on this computer, the adapter starts it itself.",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12
+				},
+				"adbHostOption": {
+					"type": "text",
+					"label": "adb server address",
+					"help": "127.0.0.1 if adb runs on the ioBroker computer",
+					"newLine": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 4,
+					"lg": 3,
+					"xl": 3
+				},
+				"adbPortOption": {
+					"type": "number",
+					"label": "adb server port",
+					"min": 1,
+					"max": 65535,
+					"xs": 12,
+					"sm": 6,
+					"md": 2,
+					"lg": 2,
+					"xl": 2
+				},
+				"adbPath": {
+					"type": "text",
+					"label": "Path to the adb program (optional)",
+					"help": "Empty = \"adb\" from the system path",
+					"newLine": true,
+					"xs": 12,
+					"sm": 6,
+					"md": 4,
+					"lg": 3,
+					"xl": 3
+				},
+				"reconnectInterval": {
+					"type": "number",
+					"label": "Check connections every",
+					"unit": "s",
+					"min": 10,
+					"max": 3600,
+					"help": "Disconnected devices are connected again in this interval",
+					"xs": 12,
+					"sm": 6,
+					"md": 3,
+					"lg": 2,
+					"xl": 2
+				}
+			}
+		}
+	}
+}

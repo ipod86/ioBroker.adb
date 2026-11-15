@@ -1,88 +1,134 @@
 ![Logo](admin/adb.png)
+
 # ioBroker.adb
 
-[![NPM version](http://img.shields.io/npm/v/iobroker.adb.svg)](https://www.npmjs.com/package/iobroker.adb)
+[![NPM version](https://img.shields.io/npm/v/iobroker.adb.svg)](https://www.npmjs.com/package/iobroker.adb)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.adb.svg)](https://www.npmjs.com/package/iobroker.adb)
-[![Dependency Status](https://img.shields.io/david/om2804/iobroker.adb.svg)](https://david-dm.org/om2804/iobroker.adb)
-[![Known Vulnerabilities](https://snyk.io/test/github/om2804/ioBroker.adb/badge.svg)](https://snyk.io/test/github/om2804/ioBroker.adb)
+![Number of Installations](https://iobroker.live/badges/adb-installed.svg)
+![Current version in stable repository](https://iobroker.live/badges/adb-stable.svg)
 
 [![NPM](https://nodei.co/npm/iobroker.adb.png?downloads=true)](https://nodei.co/npm/iobroker.adb/)
 
-**Tests:**: [![Travis-CI](http://img.shields.io/travis/om2804/ioBroker.adb/master.svg)](https://travis-ci.org/om2804/ioBroker.adb)
+**Tests:** ![Test and Release](https://github.com/ipod86/ioBroker.adb/workflows/Test%20and%20Release/badge.svg)
 
-## adb adapter for ioBroker
+🇩🇪 [Deutsche Anleitung](README.de.md)
 
-With this adapter you can control some functions of your android devices through Android Debug Bridge:
-- custom shell command
-- start/stop an application
-- reboot
-- take screenshot
+## Android Debug Bridge adapter for ioBroker
 
-### Custom shell command
+Control Android devices – phones, tablets, TV boxes, Android TV – through the Android Debug Bridge (adb).
 
-To execute shell command, write command to state **shell**. You will always get the answer in state **result**.
+## Highlights
 
-Example:
-Press POWER key **input keyevent POWER** or **shell input keyevent POWER**
+- **Wireless debugging (Android 11 and newer):** pair once with the 6-digit pairing code or by scanning a QR code in the adapter settings. The connect port of wireless debugging changes every time it is switched on – the adapter finds the current port in the network by itself and connects again.
+- **Fixed port** for TV boxes and devices switched to `adb tcpip 5555`, as before.
+- **Automatic reconnect** when a device was switched off, asleep or out of the network.
+- **Commands:** shell command with answer, send a key, start and stop apps, reboot, screenshot.
+- **Device info:** model, Android version, current port and a plain-language connection status.
+- **Network search:** lists all devices that announce wireless debugging.
 
-### Start/Stop an application
+## Requirements
 
-Start an application. Specify the component name with package name prefix to create an explicit intent.
-To start an application, write intent (*com.example.app/.ExampleActivity*.) to state **startApp**. 
+- The `adb` program on the ioBroker computer (or another computer running an adb server). Debian/Ubuntu: `sudo apt install adb`. **Pairing needs adb version 30 or newer** (`adb version`).
+- The adapter starts the adb server itself when it runs on the same computer.
+- For wireless debugging the device has to be in the same network as the adb server, because the port is found via mDNS.
+- Pairing with QR code needs a current admin (8.3 or newer). Pairing with code works with every admin.
 
-Example:  For KODI starting write **org.xbmc.kodi/.Splash**
+## Setup
 
-Stop an application. Force stop everything associated with package (the app's package name).
-To stop an application, write package name to state **stopApp**. 
+### Android 11 and newer (wireless debugging)
 
-Example: For KODI stopping write **org.xbmc.kodi**
+1. On the device: **Settings → About phone → tap "Build number" 7 times** to unlock the developer options.
+2. **Settings → Developer options → Wireless debugging** → switch on.
+3. In the adapter settings, tab **Pair**, choose one way:
+   - **Pairing code:** on the device tap *Pair device with pairing code*. Enter the IP address and the 6-digit code and press **Pair**. The pairing port can stay empty while the dialog on the device is open.
+   - **QR code:** press **Show QR code**, then **Wait for the device**. On the device tap *Pair device with QR code* and scan it.
+4. The device is added to the device list with an empty port (= automatic). Save the settings.
 
-### Reboot device
+Pairing is done once. Later the device is connected again by itself – also after a reboot or a new port – as soon as wireless debugging is on.
 
-Reboots the device. Write any value to state **reboot**.
+**Note:** Many devices switch wireless debugging off after a reboot or when they leave the Wi-Fi. Then it has to be switched on again on the device; a new pairing is not needed.
 
-### Take screenshot
+### TV boxes and fixed port
 
-Take screenshot and save to folder of adapter. Write any value to state **screencap**.
-  
-## Info
+Enter IP address and port (usually `5555`) in the device list. For phones a fixed port can be set once via USB with `adb tcpip 5555`; on most devices it is lost after a reboot.
 
-Android Debug Bridge (adb) is a versatile command-line tool that lets you communicate with a device. The adb command facilitates a variety of device actions, such as installing and debugging apps, and it provides access to a Unix shell that you can use to run a variety of commands on a device.
+When connecting the first time, the device asks to **allow USB debugging** for this computer – confirm it (tick "Always allow").
 
-adb is included in the Android SDK Platform-Tools package. You can download this package with the SDK Manager, which installs it at android_sdk/platform-tools/. In order not to install the complete Android SDK, you can install the  Minimal ADB and Fastboot or use adbLink
+## States
 
-For use adapter need start adb server.
-**adb start-server**
+For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port.
 
-### More info
+| State | Description |
+|---|---|
+| `connection` | connected to the device |
+| `status` | connection status as text, e.g. why a connection failed |
+| `port` | current port |
+| `model`, `androidVersion` | device info |
+| `shell` | write a shell command, e.g. `input keyevent 26`; the answer is written to `result` |
+| `keyevent` | send a key: key code (`26`) or name (`POWER`, `HOME`, `BACK`, `VOLUME_UP`, `MEDIA_PLAY_PAUSE`, …) |
+| `startApp` | start an app: `com.example.app/.MainActivity`, e.g. `org.xbmc.kodi/.Splash` for Kodi |
+| `stopApp` | stop an app: package name, e.g. `org.xbmc.kodi` |
+| `reboot` | button: reboot the device |
+| `screencap` | button: take a screenshot |
+| `result` | answer of the last command, or `error: …` |
 
-[Android Debug Bridge Docs](https://developer.android.com/studio/command-line/adb?hl=ru)
+Screenshots are saved as files of the adapter: `/adb.0/<device id>.png` and, as before, `/adb.0/screenshot.png` (always the last one). In vis they can be shown with the URL `/files/adb.0/<device id>.png`.
+
+## Updating from 0.0.x
+
+Devices with a port keep their states and ids. The old settings are taken over. New are the states `status`, `port`, `model`, `androidVersion` and `keyevent`.
+
+## More information
+
+[Android Debug Bridge documentation](https://developer.android.com/tools/adb)
 
 ## Changelog
 
+<!--
+	Placeholder for the next version (at the beginning of the line):
+	### **WORK IN PROGRESS**
+-->
+### **WORK IN PROGRESS**
+
+- (ipod86) Wireless debugging (Android 11+): pair with pairing code or QR code; changing ports are found automatically via mDNS
+- (ipod86) New settings page (jsonConfig), network search for devices
+- (ipod86) Automatic reconnect, new states `status`, `port`, `model`, `androidVersion`, `keyevent`; screenshots per device
+- (ipod86) Rewritten in TypeScript, current adapter-core, adbkit 4, Node.js 22 or newer, js-controller 6 or newer
+- (ipod86) "localhost" no longer resolves to IPv6 (adb server only listens on IPv4); clear message if the adb program is missing
+
+### 0.0.7
+
+- (om2804) Add meta object for fix screenshot
+
 ### 0.0.6
-* (om2804) Add delete and up/down buttons in device list.
-* (om2804) Replace dependency 'adbkit'. Active development has been moved to DeviceFarmer organisation.
-* (om2804) Add wait for device after connection.
+
+- (om2804) Add delete and up/down buttons in device list.
+- (om2804) Replace dependency 'adbkit'. Active development has been moved to DeviceFarmer organisation.
+- (om2804) Add wait for device after connection.
 
 ### 0.0.5
-* (om2804) js-controller dependency upgraded to > 2.0.0
+
+- (om2804) js-controller dependency upgraded to > 2.0.0
 
 ### 0.0.3
-* (om2804) fixes ater review
+
+- (om2804) fixes after review
 
 ### 0.0.2
-* (om2804) start/stop application
-* (om2804) reboot device
-* (om2804) take screenshot
+
+- (om2804) start/stop application
+- (om2804) reboot device
+- (om2804) take screenshot
 
 ### 0.0.1
-* (om2804) initial release
+
+- (om2804) initial release
 
 ## License
+
 MIT License
 
-Copyright (c) 2020 om2804 <om2804@mail.ru>
+Copyright (c) 2020-2026 om2804 <om2804@mail.ru>, ipod86 <david@graef.email>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,0 +1,368 @@
+/*
+ * ioBroker adapter for Android Debug Bridge
+ */
+import * as utils from '@iobroker/adapter-core';
+import { randomBytes, randomInt } from 'node:crypto';
+import { Adb, type Client } from '@devicefarmer/adbkit';
+import { hostRequest } from './lib/adbHost';
+import { AndroidDevice, DEVICE_STATES, errorText } from './lib/device';
+import { Discovery } from './lib/discovery';
+import {
+	checkDevices,
+	isValidPairingCode,
+	normalizePairingCode,
+	pairingQrText,
+	pairSucceeded,
+	parsePort,
+	type DeviceConfig,
+} from './lib/util';
+
+type Tracker = Awaited<ReturnType<Client['trackDevices']>>;
+
+interface TrackedDevice {
+	id: string;
+	type?: string;
+}
+
+/** The adapter. */
+class AdbAdapter extends utils.Adapter {
+	private client?: Client;
+	private tracker?: Tracker;
+	private discovery?: Discovery;
+	private devices: AndroidDevice[] = [];
+	private timer?: ioBroker.Interval;
+	private serverHost = '127.0.0.1';
+	private serverPort = 5037;
+	private serverOk?: boolean;
+	private qr?: { name: string; password: string; created: number };
+
+	/**
+	 * @param options adapter options
+	 */
+	public constructor(options: Partial<utils.AdapterOptions> = {}) {
+		super({ ...options, name: 'adb' });
+		this.on('ready', this.onReady.bind(this));
+		this.on('stateChange', this.onStateChange.bind(this));
+		this.on('message', this.onMessage.bind(this));
+		this.on('unload', this.onUnload.bind(this));
+	}
+
+	/** Starts the adapter. */
+	private async onReady(): Promise<void> {
+		await this.setState('info.connection', false, true);
+
+		const host = String(this.config.adbHostOption || '127.0.0.1').trim();
+		// "localhost" can resolve to ::1, but the adb server only listens on IPv4
+		this.serverHost = host === 'localhost' ? '127.0.0.1' : host;
+		this.serverPort = parsePort(this.config.adbPortOption) ?? 5037;
+		const bin = String(this.config.adbPath || '').trim() || 'adb';
+
+		this.client = Adb.createClient({ host: this.serverHost, port: this.serverPort, bin });
+		this.discovery = new Discovery(this.log);
+		this.discovery.start();
+
+		const { ok, problems } = checkDevices(this.config.devices);
+		problems.forEach(p => this.log.warn(p));
+		for (const cfg of ok) {
+			const dev = new AndroidDevice(this, this.client, this.discovery, cfg);
+			await this.createDeviceObjects(dev);
+			await this.setState(dev.stateId('connection'), false, true);
+			this.devices.push(dev);
+		}
+		if (!this.devices.length) {
+			this.log.info('No devices configured yet. Add them in the adapter settings.');
+		}
+
+		await this.subscribeStatesAsync('*');
+		// give mDNS a moment to collect the announcements before the first connect
+		this.setTimeout(() => void this.tick(), 3000);
+		const interval = Math.max(10, Number(this.config.reconnectInterval) || 30);
+		this.timer = this.setInterval(() => void this.tick(), interval * 1000);
+	}
+
+	/** Checks the adb server and reconnects devices */
+	private async tick(): Promise<void> {
+		if (!this.tracker && !(await this.startTracking())) {
+			return;
+		}
+		for (const dev of this.devices) {
+			if (!dev.connected) {
+				await dev.ensureConnected(true);
+			}
+		}
+	}
+
+	/** Connects to the adb server and follows its device list. */
+	private async startTracking(): Promise<boolean> {
+		try {
+			// starts the adb server if it runs on this host and is not running yet
+			await this.client!.version();
+			const tracker = await this.client!.trackDevices();
+			this.tracker = tracker;
+			tracker.on('add', (d: TrackedDevice) => void this.onTracker(d.id, d.type));
+			tracker.on('change', (d: TrackedDevice) => void this.onTracker(d.id, d.type));
+			tracker.on('remove', (d: TrackedDevice) => void this.onTracker(d.id, undefined));
+			tracker.on('end', () => {
+				this.tracker = undefined;
+				this.serverOk = false;
+				void this.setState('info.connection', false, true);
+				this.log.warn('Connection to adb server lost, retrying');
+				for (const dev of this.devices) {
+					void dev.onTracker(dev.serial ?? '', undefined);
+				}
+			});
+			tracker.on('error', (e: unknown) => this.log.debug(`tracker: ${errorText(e)}`));
+			if (this.serverOk !== true) {
+				this.log.info(`Connected to adb server ${this.serverHost}:${this.serverPort}`);
+			}
+			this.serverOk = true;
+			await this.setState('info.connection', true, true);
+			return true;
+		} catch (e) {
+			const msg = errorText(e);
+			if (this.serverOk !== false) {
+				this.log.error(
+					/ENOENT/.test(msg)
+						? 'adb program not found. Install it (Debian/Ubuntu: "sudo apt install adb") or enter its path in the settings.'
+						: `adb server ${this.serverHost}:${this.serverPort} not reachable: ${msg}`,
+				);
+			}
+			this.serverOk = false;
+			await this.setState('info.connection', false, true);
+			return false;
+		}
+	}
+
+	/**
+	 * Forwards a change of the adb device list to the device.
+	 *
+	 * @param serial adb serial
+	 * @param type device type or service type
+	 */
+	private async onTracker(serial: string, type: string | undefined): Promise<void> {
+		this.log.debug(`adb: ${serial} ${type ?? 'removed'}`);
+		for (const dev of this.devices) {
+			if (dev.owns(serial)) {
+				await dev.onTracker(serial, type);
+			}
+		}
+	}
+
+	/**
+	 * Creates or updates the objects of a device.
+	 *
+	 * @param dev device
+	 */
+	private async createDeviceObjects(dev: AndroidDevice): Promise<void> {
+		await this.extendObject(dev.objectId, {
+			type: 'device',
+			common: { name: dev.name, statusStates: { onlineId: `${this.namespace}.${dev.stateId('connection')}` } },
+			native: { ip: dev.ip, port: dev.fixedPort ?? null },
+		});
+		for (const [id, common] of Object.entries(DEVICE_STATES)) {
+			await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
+		}
+	}
+
+	/**
+	 * Runs commands written to device states.
+	 *
+	 * @param id state id
+	 * @param state new state
+	 */
+	private async onStateChange(id: string, state: ioBroker.State | null | undefined): Promise<void> {
+		if (!state || state.ack) {
+			return;
+		}
+		const parts = id.split('.');
+		const name = parts.pop()!;
+		const objectId = parts.pop();
+		const dev = this.devices.find(d => d.objectId === objectId);
+		if (!dev || !DEVICE_STATES[name]?.write) {
+			return;
+		}
+		await dev.command(name, state.val);
+		// commands are acknowledged, buttons go back to their empty state
+		if (DEVICE_STATES[name].role !== 'button') {
+			await this.setState(id, state.val, true);
+		}
+	}
+
+	/**
+	 * Answers requests from the settings page.
+	 *
+	 * @param obj message
+	 */
+	private async onMessage(obj: ioBroker.Message): Promise<void> {
+		if (!obj || typeof obj.message !== 'object' || !obj.callback) {
+			return;
+		}
+		const msg = obj.message as Record<string, unknown>;
+		let answer: Record<string, unknown>;
+		try {
+			switch (obj.command) {
+				case 'pair':
+					answer = await this.pairWithCode(msg);
+					break;
+				case 'qrCode':
+					// qrCodeSendTo expects a plain string
+					this.sendTo(obj.from, obj.command, this.qrCode().text, obj.callback);
+					return;
+				case 'qrPair':
+					answer = await this.pairWithQr(msg);
+					break;
+				case 'discover':
+					answer = await this.discover(msg);
+					break;
+				default:
+					answer = { error: `Unknown command ${obj.command}` };
+			}
+		} catch (e) {
+			answer = { error: errorText(e) };
+		}
+		this.sendTo(obj.from, obj.command, answer, obj.callback);
+	}
+
+	/**
+	 * Pairs with the 6-digit code ("Pair device with pairing code").
+	 *
+	 * @param msg ip, port (optional), code, devices from the form
+	 */
+	private async pairWithCode(msg: Record<string, unknown>): Promise<Record<string, unknown>> {
+		const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
+		const code = normalizePairingCode(msg.code as string);
+		if (!ip) {
+			return { error: 'Enter the IP address of the device' };
+		}
+		if (!isValidPairingCode(code)) {
+			return { error: 'The pairing code has 6 digits' };
+		}
+		let port = parsePort(msg.port as string);
+		if (!port) {
+			const found = await this.discovery!.waitForPairing(s => s.ip === ip, 8000);
+			port = found?.port;
+		}
+		if (!port) {
+			return {
+				error: 'Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.',
+			};
+		}
+		await this.pair(ip, port, code);
+		return this.pairedAnswer(ip, msg.devices);
+	}
+
+	/** Creates the QR code text for "Pair device with QR code" */
+	private qrCode(): { text: string } {
+		if (!this.qr || Date.now() - this.qr.created > 10 * 60_000) {
+			this.qr = {
+				name: `iobroker-${randomBytes(3).toString('hex')}`,
+				password: String(randomInt(100000, 1000000)),
+				created: Date.now(),
+			};
+		}
+		return { text: pairingQrText(this.qr.name, this.qr.password) };
+	}
+
+	/**
+	 * Waits until the device scanned the QR code and pairs.
+	 *
+	 * @param msg devices from the form
+	 */
+	private async pairWithQr(msg: Record<string, unknown>): Promise<Record<string, unknown>> {
+		if (!this.qr) {
+			return { error: 'Show the QR code first' };
+		}
+		const { name, password } = this.qr;
+		const found = await this.discovery!.waitForPairing(s => s.name === name, 60_000);
+		if (!found) {
+			return { error: 'No device has scanned the QR code within 60 seconds' };
+		}
+		await this.pair(found.ip, found.port, password);
+		this.qr = undefined;
+		return this.pairedAnswer(found.ip, msg.devices);
+	}
+
+	/**
+	 * Sends the pairing request to the adb server.
+	 *
+	 * @param ip device IP address
+	 * @param port pairing port
+	 * @param code pairing code or password
+	 */
+	private async pair(ip: string, port: number, code: string): Promise<void> {
+		// make sure the adb server runs
+		await this.client!.version();
+		const answer = await hostRequest(this.serverHost, this.serverPort, `host:pair:${code}:${ip}:${port}`, 30_000);
+		this.log.info(`Pairing ${ip}:${port}: ${answer}`);
+		if (!pairSucceeded(answer)) {
+			throw new Error(answer || 'Pairing failed');
+		}
+	}
+
+	/**
+	 * Answer after pairing: adds the device to the list in the form, if missing.
+	 *
+	 * @param ip device IP
+	 * @param formDevices device list currently shown in the form
+	 */
+	private pairedAnswer(ip: string, formDevices: unknown): Record<string, unknown> {
+		const devices: DeviceConfig[] = Array.isArray(formDevices)
+			? (formDevices as DeviceConfig[])
+			: [...(this.config.devices ?? [])];
+		const known = devices.some(d => String(d.ip).trim() === ip);
+		if (known) {
+			return { result: 'paired', args: [ip] };
+		}
+		const found = this.discovery!.devices().find(s => s.ip === ip);
+		const name = found?.name.replace(/^adb-/, '').replace(/-[^-]+$/, '') || ip;
+		return {
+			result: 'pairedAdded',
+			args: [ip],
+			native: { devices: [...devices, { enabled: true, name, ip, port: '' }] },
+		};
+	}
+
+	/**
+	 * Lists devices with wireless debugging in the network.
+	 *
+	 * @param _msg unused
+	 */
+	private async discover(_msg: Record<string, unknown>): Promise<Record<string, unknown>> {
+		this.discovery!.refresh();
+		await this.delay(3000);
+		const list = this.discovery!.devices();
+		if (!list.length) {
+			return { result: 'noneFound' };
+		}
+		return {
+			result: 'found',
+			args: [list.map(s => `${s.ip} (port ${s.port}, ${s.name})`).join('\n')],
+		};
+	}
+
+	/**
+	 * Stops everything.
+	 *
+	 * @param callback called when done
+	 */
+	private async onUnload(callback: () => void): Promise<void> {
+		try {
+			if (this.timer) {
+				this.clearInterval(this.timer);
+			}
+			this.tracker?.end();
+			this.discovery?.stop();
+			await Promise.all(this.devices.map(d => d.close()));
+		} finally {
+			callback();
+		}
+	}
+}
+
+if (require.main !== module) {
+	// Export the constructor in compact mode
+	module.exports = (options: Partial<utils.AdapterOptions> | undefined) => new AdbAdapter(options);
+} else {
+	// otherwise start the instance directly
+	(() => new AdbAdapter())();
+}
