@@ -3,19 +3,6 @@
         "name": "adb",
         "version": "0.0.7",
         "news": {
-            "0.1.0": {
-                "en": "Wireless debugging (Android 11+): pair with code or QR code, changing ports are found automatically\nNew settings page, automatic reconnect, new states: status, port, model, Android version, key event\nModernized for current ioBroker and Node.js versions",
-                "de": "Kabelloses Debugging (Android 11+): Koppeln per Code oder QR-Code, wechselnde Ports werden automatisch gefunden\nNeue Einstellungsseite, automatisches Wiederverbinden, neue Datenpunkte: Status, Port, Modell, Android-Version, Taste senden\nFür aktuelle ioBroker- und Node.js-Versionen modernisiert",
-                "ru": "Беспроводная отладка (Android 11+): сопряжение по коду или QR-коду, меняющиеся порты находятся автоматически\nНовая страница настроек, автоматическое переподключение, новые состояния: статус, порт, модель, версия Android, нажатие клавиши\nМодернизировано для текущих версий ioBroker и Node.js",
-                "pt": "Depuração sem fio (Android 11+): parear com código ou código QR, portas variáveis são encontradas automaticamente\nNova página de configurações, reconexão automática, novos estados: status, porta, modelo, versão do Android, evento de tecla\nModernizado para as versões atuais do ioBroker e Node.js",
-                "nl": "Draadloze foutopsporing (Android 11+): koppelen met code of QR-code, wisselende poorten worden automatisch gevonden\nNieuwe instellingenpagina, automatisch opnieuw verbinden, nieuwe states: status, poort, model, Android-versie, toets sturen\nGemoderniseerd voor huidige ioBroker- en Node.js-versies",
-                "fr": "Débogage sans fil (Android 11+) : association par code ou code QR, les ports changeants sont trouvés automatiquement\nNouvelle page de paramètres, reconnexion automatique, nouveaux états : statut, port, modèle, version Android, touche\nModernisé pour les versions actuelles d'ioBroker et de Node.js",
-                "it": "Debug wireless (Android 11+): associazione con codice o codice QR, le porte che cambiano vengono trovate automaticamente\nNuova pagina delle impostazioni, riconnessione automatica, nuovi stati: stato, porta, modello, versione Android, tasto\nModernizzato per le versioni attuali di ioBroker e Node.js",
-                "es": "Depuración inalámbrica (Android 11+): vincular con código o código QR, los puertos cambiantes se encuentran automáticamente\nNueva página de ajustes, reconexión automática, nuevos estados: estado, puerto, modelo, versión de Android, tecla\nModernizado para las versiones actuales de ioBroker y Node.js",
-                "pl": "Debugowanie bezprzewodowe (Android 11+): parowanie kodem lub kodem QR, zmieniające się porty są wyszukiwane automatycznie\nNowa strona ustawień, automatyczne ponowne łączenie, nowe stany: status, port, model, wersja Androida, klawisz\nZmodernizowano dla aktualnych wersji ioBroker i Node.js",
-                "uk": "Бездротове налагодження (Android 11+): спарювання за кодом або QR-кодом, змінні порти знаходяться автоматично\nНова сторінка налаштувань, автоматичне перепідключення, нові стани: статус, порт, модель, версія Android, клавіша\nМодернізовано для поточних версій ioBroker і Node.js",
-                "zh-cn": "无线调试（Android 11+）：使用配对码或二维码配对，自动查找变化的端口\n新的设置页面，自动重新连接，新状态：状态、端口、型号、Android 版本、按键\n针对当前 ioBroker 和 Node.js 版本进行了现代化"
-            },
             "0.0.7": {
                 "en": "Add meta object for fix screenshot.",
                 "de": "Fügen Sie Meta-Objekt für Fix Screenshot hinzu",
