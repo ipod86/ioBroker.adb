@@ -3,6 +3,8 @@
  */
 import * as utils from '@iobroker/adapter-core';
 import { randomBytes, randomInt } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Adb, type Client } from '@devicefarmer/adbkit';
 import { hostRequest } from './lib/adbHost';
 import { AndroidDevice, DEVICE_STATES, errorText } from './lib/device';
@@ -27,6 +29,12 @@ interface TrackedDevice {
 	type?: string;
 }
 
+/** Answer texts (keys of admin/i18n) */
+const AUTOMATION_GRANTED =
+	'%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.';
+const NO_AUTOMATION_APP =
+	'No supported automation app found on the device. Install one of: %s – then press the button again.';
+
 /** The adapter. */
 class AdbAdapter extends utils.Adapter {
 	private client?: Client;
@@ -37,6 +45,7 @@ class AdbAdapter extends utils.Adapter {
 	private serverHost = '127.0.0.1';
 	private serverPort = 5037;
 	private serverOk?: boolean;
+	private texts: Record<string, string> = {};
 	private qr?: {
 		name: string;
 		password: string;
@@ -61,6 +70,7 @@ class AdbAdapter extends utils.Adapter {
 	/** Starts the adapter. */
 	private async onReady(): Promise<void> {
 		await this.setState('info.connection', false, true);
+		await this.loadTexts();
 
 		const host = String(this.config.adbHostOption || '127.0.0.1').trim();
 		// "localhost" can resolve to ::1, but the adb server only listens on IPv4
@@ -402,6 +412,32 @@ class AdbAdapter extends utils.Adapter {
 		};
 	}
 
+	/** Loads the texts of the settings page in the system language, for answers shown there. */
+	private async loadTexts(): Promise<void> {
+		try {
+			const sys = await this.getForeignObjectAsync('system.config');
+			const lang = (sys?.common?.language as string) || 'en';
+			const dir = join(__dirname, '..', 'admin', 'i18n');
+			this.texts = JSON.parse(readFileSync(join(dir, `${lang}.json`), 'utf8')) as Record<string, string>;
+		} catch {
+			this.texts = {};
+		}
+	}
+
+	/**
+	 * Text in the system language, `%s` replaced by the arguments.
+	 *
+	 * @param key English text
+	 * @param args replacements for %s
+	 */
+	private t(key: string, ...args: string[]): string {
+		let text = this.texts[key] || key;
+		for (const a of args) {
+			text = text.replace('%s', a);
+		}
+		return text;
+	}
+
 	/**
 	 * Apps installed on a device, for the app selection in the device list. Known automation apps come first.
 	 *
@@ -452,7 +488,7 @@ class AdbAdapter extends utils.Adapter {
 			const installed = parsePackages(await dev.run('pm list packages --user 0'));
 			apps = Object.keys(AUTOMATION_APPS).filter(p => installed.includes(p));
 			if (!apps.length) {
-				return { result: 'noAutomationApp', args: [Object.values(AUTOMATION_APPS).join(', ')] };
+				return { result: this.t(NO_AUTOMATION_APP, Object.values(AUTOMATION_APPS).join(', ')) };
 			}
 		}
 		const done: string[] = [];
@@ -468,7 +504,7 @@ class AdbAdapter extends utils.Adapter {
 			return { error: 'The device refused the permission, see the log' };
 		}
 		this.log.info(`${dev.label}: ${done.join(', ')} may now switch wireless debugging on`);
-		return { result: 'automationGranted', args: [done.join(', ')] };
+		return { result: this.t(AUTOMATION_GRANTED, done.join(', ')) };
 	}
 
 	/**

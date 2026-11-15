@@ -84,11 +84,7 @@
 							"variant": "outlined",
 							"showProcess": true,
 							"timeout": 30000,
-							"disabled": "!!data.port || !data.ip",
-							"result": {
-								"automationGranted": "%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.",
-								"noAutomationApp": "No supported automation app found on the device. Install one of: %s – then press the button again."
-							}
+							"disabled": "!!data.port || !data.ip"
 						}
 					]
 				},

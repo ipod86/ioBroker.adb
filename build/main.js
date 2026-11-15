@@ -23,11 +23,15 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var utils = __toESM(require("@iobroker/adapter-core"));
 var import_node_crypto = require("node:crypto");
+var import_node_fs = require("node:fs");
+var import_node_path = require("node:path");
 var import_adbkit = require("@devicefarmer/adbkit");
 var import_adbHost = require("./lib/adbHost");
 var import_device = require("./lib/device");
 var import_discovery = require("./lib/discovery");
 var import_util = require("./lib/util");
+const AUTOMATION_GRANTED = "%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi \u2192 system setting (global) adb_wifi_enabled = 1.";
+const NO_AUTOMATION_APP = "No supported automation app found on the device. Install one of: %s \u2013 then press the button again.";
 class AdbAdapter extends utils.Adapter {
   client;
   tracker;
@@ -37,6 +41,7 @@ class AdbAdapter extends utils.Adapter {
   serverHost = "127.0.0.1";
   serverPort = 5037;
   serverOk;
+  texts = {};
   qr;
   /**
    * @param options adapter options
@@ -52,6 +57,7 @@ class AdbAdapter extends utils.Adapter {
   async onReady() {
     var _a;
     await this.setState("info.connection", false, true);
+    await this.loadTexts();
     const host = String(this.config.adbHostOption || "127.0.0.1").trim();
     this.serverHost = host === "localhost" ? "127.0.0.1" : host;
     this.serverPort = (_a = (0, import_util.parsePort)(this.config.adbPortOption)) != null ? _a : 5037;
@@ -365,6 +371,31 @@ class AdbAdapter extends utils.Adapter {
       native: { devices: [...devices, { enabled: true, name, ip, port: "" }] }
     };
   }
+  /** Loads the texts of the settings page in the system language, for answers shown there. */
+  async loadTexts() {
+    var _a;
+    try {
+      const sys = await this.getForeignObjectAsync("system.config");
+      const lang = ((_a = sys == null ? void 0 : sys.common) == null ? void 0 : _a.language) || "en";
+      const dir = (0, import_node_path.join)(__dirname, "..", "admin", "i18n");
+      this.texts = JSON.parse((0, import_node_fs.readFileSync)((0, import_node_path.join)(dir, `${lang}.json`), "utf8"));
+    } catch {
+      this.texts = {};
+    }
+  }
+  /**
+   * Text in the system language, `%s` replaced by the arguments.
+   *
+   * @param key English text
+   * @param args replacements for %s
+   */
+  t(key, ...args) {
+    let text = this.texts[key] || key;
+    for (const a of args) {
+      text = text.replace("%s", a);
+    }
+    return text;
+  }
   /**
    * Apps installed on a device, for the app selection in the device list. Known automation apps come first.
    *
@@ -413,7 +444,7 @@ class AdbAdapter extends utils.Adapter {
       const installed = (0, import_util.parsePackages)(await dev.run("pm list packages --user 0"));
       apps = Object.keys(import_util.AUTOMATION_APPS).filter((p) => installed.includes(p));
       if (!apps.length) {
-        return { result: "noAutomationApp", args: [Object.values(import_util.AUTOMATION_APPS).join(", ")] };
+        return { result: this.t(NO_AUTOMATION_APP, Object.values(import_util.AUTOMATION_APPS).join(", ")) };
       }
     }
     const done = [];
@@ -429,7 +460,7 @@ class AdbAdapter extends utils.Adapter {
       return { error: "The device refused the permission, see the log" };
     }
     this.log.info(`${dev.label}: ${done.join(", ")} may now switch wireless debugging on`);
-    return { result: "automationGranted", args: [done.join(", ")] };
+    return { result: this.t(AUTOMATION_GRANTED, done.join(", ")) };
   }
   /**
    * Lists devices with wireless debugging in the network.
