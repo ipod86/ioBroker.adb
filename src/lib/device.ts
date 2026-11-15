@@ -384,6 +384,19 @@ export class AndroidDevice {
 		await this.setResult(out.toString().trim() || 'ok');
 	}
 
+	/**
+	 * Runs a shell command and returns its output, without writing "result".
+	 *
+	 * @param command shell command
+	 */
+	async run(command: string): Promise<string> {
+		if (!(await this.ensureConnected())) {
+			throw new Error(this.lastStatus || 'not connected');
+		}
+		const out = await Adb.util.readAll(await this.device().shell(command));
+		return out.toString().trim();
+	}
+
 	/** Takes a screenshot and stores it as file. */
 	private async screencap(): Promise<void> {
 		const png = extractPng(await Adb.util.readAll(await this.device().screencap()));

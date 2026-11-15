@@ -30,21 +30,21 @@
 							"type": "checkbox",
 							"attr": "enabled",
 							"title": "Active",
-							"width": "10%",
+							"width": "8%",
 							"default": true
 						},
 						{
 							"type": "text",
 							"attr": "name",
 							"title": "Name",
-							"width": "30%",
+							"width": "24%",
 							"default": ""
 						},
 						{
 							"type": "text",
 							"attr": "ip",
 							"title": "IP address",
-							"width": "30%",
+							"width": "22%",
 							"default": "",
 							"validator": "data.ip && data.ip.trim() !== ''",
 							"validatorNoSaveOnError": true,
@@ -54,12 +54,39 @@
 							"type": "text",
 							"attr": "port",
 							"title": "Port (empty = automatic)",
-							"width": "30%",
+							"width": "20%",
 							"default": "",
 							"validator": "!data.port || /^\\d{1,5}$/.test(String(data.port).trim())",
 							"validatorErrorText": "Only digits, or leave empty"
+						},
+						{
+							"type": "sendTo",
+							"attr": "_grant",
+							"title": "Stay connected after reboot",
+							"width": "26%",
+							"label": "Allow automation app",
+							"command": "grantAutomation",
+							"jsonData": "{\"ip\": \"${data.ip}\"}",
+							"variant": "outlined",
+							"showProcess": true,
+							"timeout": 30000,
+							"disabled": "!!data.port || !data.ip",
+							"result": {
+								"automationGranted": "%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.",
+								"noAutomationApp": "No supported automation app found on the device. Install one of: %s – then press the button again."
+							}
 						}
 					]
+				},
+				"automationHint": {
+					"type": "staticText",
+					"text": "Android switches wireless debugging off at every reboot. \"Allow automation app\" lets MacroDroid, Tasker or Automate on the device switch it on again by itself (needs a connected device; only for devices with automatic port).",
+					"newLine": true,
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12
 				},
 				"discover": {
 					"type": "sendTo",

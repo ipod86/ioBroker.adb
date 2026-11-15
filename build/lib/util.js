@@ -18,6 +18,7 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var util_exports = {};
 __export(util_exports, {
+  AUTOMATION_APPS: () => AUTOMATION_APPS,
   checkDevices: () => checkDevices,
   cleanShellCommand: () => cleanShellCommand,
   deviceObjectId: () => deviceObjectId,
@@ -27,6 +28,7 @@ __export(util_exports, {
   normalizePairingCode: () => normalizePairingCode,
   pairSucceeded: () => pairSucceeded,
   pairingQrText: () => pairingQrText,
+  parsePackages: () => parsePackages,
   parsePort: () => parsePort,
   portOfSerial: () => portOfSerial,
   startComponent: () => startComponent,
@@ -105,8 +107,17 @@ function checkDevices(devices) {
   }
   return { ok, problems };
 }
+const AUTOMATION_APPS = {
+  "com.arlosoft.macrodroid": "MacroDroid",
+  "net.dinglisch.android.taskerm": "Tasker",
+  "com.llamalab.automate": "Automate"
+};
+function parsePackages(output) {
+  return output.split(/\r?\n/).map((l) => l.trim().replace(/^package:/, "")).filter(Boolean);
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  AUTOMATION_APPS,
   checkDevices,
   cleanShellCommand,
   deviceObjectId,
@@ -116,6 +127,7 @@ function checkDevices(devices) {
   normalizePairingCode,
   pairSucceeded,
   pairingQrText,
+  parsePackages,
   parsePort,
   portOfSerial,
   startComponent,

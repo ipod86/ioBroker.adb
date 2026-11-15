@@ -363,6 +363,18 @@ class AndroidDevice {
     const out = await import_adbkit.Adb.util.readAll(await this.device().shell(command));
     await this.setResult(out.toString().trim() || "ok");
   }
+  /**
+   * Runs a shell command and returns its output, without writing "result".
+   *
+   * @param command shell command
+   */
+  async run(command) {
+    if (!await this.ensureConnected()) {
+      throw new Error(this.lastStatus || "not connected");
+    }
+    const out = await import_adbkit.Adb.util.readAll(await this.device().shell(command));
+    return out.toString().trim();
+  }
   /** Takes a screenshot and stores it as file. */
   async screencap() {
     const png = (0, import_util.extractPng)(await import_adbkit.Adb.util.readAll(await this.device().screencap()));

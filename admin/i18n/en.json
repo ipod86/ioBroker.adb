@@ -35,5 +35,12 @@
 	"Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.": "Pairing port not found. Keep the pairing dialog open on the device, or enter the port shown there.",
 	"Show the QR code first": "Show the QR code first",
 	"No device has scanned the QR code within 60 seconds": "No device has scanned the QR code within 60 seconds",
-	"Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.": "Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result."
+	"Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.": "Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.",
+	"Stay connected after reboot": "Stay connected after reboot",
+	"Allow automation app": "Allow automation app",
+	"%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.": "%s may now switch wireless debugging on. In the app create a macro: when the phone has started or is connected to your home Wi-Fi → system setting (global) adb_wifi_enabled = 1.",
+	"No supported automation app found on the device. Install one of: %s – then press the button again.": "No supported automation app found on the device. Install one of: %s – then press the button again.",
+	"Android switches wireless debugging off at every reboot. \"Allow automation app\" lets MacroDroid, Tasker or Automate on the device switch it on again by itself (needs a connected device; only for devices with automatic port).": "Android switches wireless debugging off at every reboot. \"Allow automation app\" lets MacroDroid, Tasker or Automate on the device switch it on again by itself (needs a connected device; only for devices with automatic port).",
+	"Save the settings first, then try again": "Save the settings first, then try again",
+	"The device refused the permission, see the log": "The device refused the permission, see the log"
 }

@@ -14,6 +14,8 @@ import {
 	pairingQrText,
 	pairSucceeded,
 	parsePort,
+	parsePackages,
+	AUTOMATION_APPS,
 	type DeviceConfig,
 } from './lib/util';
 
@@ -222,6 +224,9 @@ class AdbAdapter extends utils.Adapter {
 				case 'discover':
 					answer = await this.discover(msg);
 					break;
+				case 'grantAutomation':
+					answer = await this.grantAutomation(msg);
+					break;
 				default:
 					answer = { error: `Unknown command ${obj.command}` };
 			}
@@ -390,6 +395,39 @@ class AdbAdapter extends utils.Adapter {
 			args: [ip],
 			native: { devices: [...devices, { enabled: true, name, ip, port: '' }] },
 		};
+	}
+
+	/**
+	 * Allows installed automation apps to write secure settings, so they can switch
+	 * wireless debugging on again after a reboot (`settings put global adb_wifi_enabled 1`).
+	 *
+	 * @param msg ip of the device
+	 */
+	private async grantAutomation(msg: Record<string, unknown>): Promise<Record<string, unknown>> {
+		const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
+		const dev = this.devices.find(d => d.ip === ip);
+		if (!dev) {
+			return { error: 'Save the settings first, then try again' };
+		}
+		const installed = parsePackages(await dev.run('pm list packages'));
+		const apps = Object.keys(AUTOMATION_APPS).filter(p => installed.includes(p));
+		if (!apps.length) {
+			return { result: 'noAutomationApp', args: [Object.values(AUTOMATION_APPS).slice(0, 3).join(', ')] };
+		}
+		const done: string[] = [];
+		for (const pkg of apps) {
+			const out = await dev.run(`pm grant ${pkg} android.permission.WRITE_SECURE_SETTINGS`);
+			if (out) {
+				this.log.warn(`${dev.label}: granting ${pkg} failed: ${out}`);
+			} else {
+				done.push(AUTOMATION_APPS[pkg]);
+			}
+		}
+		if (!done.length) {
+			return { error: 'The device refused the permission, see the log' };
+		}
+		this.log.info(`${dev.label}: ${done.join(', ')} may now switch wireless debugging on`);
+		return { result: 'automationGranted', args: [done.join(', ')] };
 	}
 
 	/**

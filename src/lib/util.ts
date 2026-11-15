@@ -166,3 +166,22 @@ export function checkDevices(devices: DeviceConfig[] | undefined): { ok: DeviceC
 	}
 	return { ok, problems };
 }
+
+/** Automation apps that can switch wireless debugging on after a reboot, if they may write secure settings */
+export const AUTOMATION_APPS: Record<string, string> = {
+	'com.arlosoft.macrodroid': 'MacroDroid',
+	'net.dinglisch.android.taskerm': 'Tasker',
+	'com.llamalab.automate': 'Automate',
+};
+
+/**
+ * Package names from the output of `pm list packages`.
+ *
+ * @param output command output
+ */
+export function parsePackages(output: string): string[] {
+	return output
+		.split(/\r?\n/)
+		.map(l => l.trim().replace(/^package:/, ''))
+		.filter(Boolean);
+}
