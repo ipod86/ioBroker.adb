@@ -78,7 +78,7 @@ Hinweis: Kabelloses Debugging ist dann in deinem Heimnetz ständig an. Verbinden
 
 ### Debugging-Benachrichtigung ausblenden
 
-Solange eine Verbindung besteht, zeigt Android dauerhaft die Benachrichtigung „Kabelloses Debugging verbunden“. Sie gehört zu Android selbst und lässt sich in den Einstellungen nicht abschalten. Den Datenpunkt `hideNotification` des Geräts auf `true` setzen: Der Adapter schlummert die Benachrichtigung für die längste Zeit, die Android erlaubt, wiederholt das nach jeder Verbindung und erneuert es regelmäßig. `false` zeigt sie wieder an.
+Solange eine Verbindung besteht, zeigt Android dauerhaft die Benachrichtigung „Kabelloses Debugging verbunden“. Sie gehört zu Android selbst und lässt sich in den Einstellungen nicht abschalten. In der Geräteliste in der Zeile des Geräts **Debug-Hinweis ausblenden** anhaken (oder den Datenpunkt `hideNotification` auf `true` setzen – das gilt bis zum nächsten Adapter-Neustart, beim Start entscheidet die Einstellung): Der Adapter schlummert die Benachrichtigung für die längste Zeit, die Android erlaubt, wiederholt das nach jeder Verbindung und erneuert es regelmäßig. `false` zeigt sie wieder an.
 
 ### TV-Boxen und fester Port
 
@@ -103,7 +103,7 @@ Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei fest
 | `reboot` | Taste: Gerät neu starten |
 | `screencap` | Taste: Bildschirmfoto aufnehmen |
 | `result` | Antwort des letzten Befehls oder `error: …` |
-| `hideNotification` | nur kabellose Geräte: `true` blendet die Meldung „Kabelloses Debugging verbunden“ aus |
+| `hideNotification` | nur kabellose Geräte: `true` blendet die Meldung „Kabelloses Debugging verbunden“ aus (Startwert aus der Einstellung „Debug-Hinweis ausblenden“) |
 
 Bildschirmfotos werden als Dateien des Adapters gespeichert: `/adb.0/<Geräte-ID>.png` und wie bisher `/adb.0/screenshot.png` (immer das letzte). In vis lassen sie sich mit der URL `/files/adb.0/<Geräte-ID>.png` anzeigen.
 

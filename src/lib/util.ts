@@ -11,6 +11,8 @@ export interface DeviceConfig {
 	port: string | number;
 	/** Package name of the automation app that switches wireless debugging on after a reboot */
 	automationApp?: string;
+	/** Hide the "wireless debugging connected" notification */
+	hideNotification?: boolean;
 }
 
 /**

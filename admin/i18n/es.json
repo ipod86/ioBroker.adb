@@ -14,6 +14,7 @@
 	"Enter the IP address": "Introduzca la dirección IP",
 	"Enter the IP address of the device": "Ingrese la dirección IP del dispositivo",
 	"Found in the network:\n%s": "Encontrado en la red:\n%s",
+	"Hide debug notice": "Ocultar aviso de depuración",
 	"IP address": "dirección IP",
 	"Name": "Nombre",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "No se encontró ningún dispositivo. ¿Está activada la depuración inalámbrica y el dispositivo está en la misma red?",

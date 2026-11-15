@@ -14,6 +14,7 @@
 	"Enter the IP address": "Entrez l'adresse IP",
 	"Enter the IP address of the device": "Entrez l'adresse IP de l'appareil",
 	"Found in the network:\n%s": "Trouvé sur le réseau :\n%s",
+	"Hide debug notice": "Masquer l'avis de débogage",
 	"IP address": "Adresse IP",
 	"Name": "Nom",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Aucun appareil trouvé. Le débogage sans fil est-il activé et l'appareil est-il sur le même réseau ?",

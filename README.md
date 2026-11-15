@@ -87,7 +87,7 @@ Note: wireless debugging is then always on in your home network. Only devices th
 
 ### Hide the debugging notification
 
-While connected, Android shows a permanent notification "Wireless debugging connected". It belongs to Android itself and cannot be switched off in the settings. Set the state `hideNotification` of the device to `true`: the adapter snoozes the notification for the longest time Android allows, does it again after every connection and renews it regularly. `false` shows it again.
+While connected, Android shows a permanent notification "Wireless debugging connected". It belongs to Android itself and cannot be switched off in the settings. Tick **Hide debug notice** in the row of the device in the device list (or set the state `hideNotification` to `true` – this switches it until the next adapter restart, the setting decides at start): the adapter snoozes the notification for the longest time Android allows, does it again after every connection and renews it regularly. `false` shows it again.
 
 ### TV boxes and fixed port
 
@@ -112,7 +112,7 @@ For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port
 | `reboot` | button: reboot the device |
 | `screencap` | button: take a screenshot |
 | `result` | answer of the last command, or `error: …` |
-| `hideNotification` | only wireless devices: `true` hides the notification "Wireless debugging connected" |
+| `hideNotification` | only wireless devices: `true` hides the notification "Wireless debugging connected" (start value from the setting "Hide debug notice") |
 
 Screenshots are saved as files of the adapter: `/adb.0/<device id>.png` and, as before, `/adb.0/screenshot.png` (always the last one). In vis they can be shown with the URL `/files/adb.0/<device id>.png`.
 

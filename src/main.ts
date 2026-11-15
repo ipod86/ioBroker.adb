@@ -90,8 +90,9 @@ class AdbAdapter extends utils.Adapter {
 			await this.createDeviceObjects(dev);
 			await this.setState(dev.stateId('connection'), false, true);
 			if (!dev.fixedPort) {
-				const hide = await this.getStateAsync(dev.stateId('hideNotification'));
-				dev.hideNotification = hide?.val === true;
+				// the setting decides at start; the state can switch it until the next restart
+				dev.hideNotification = cfg.hideNotification === true;
+				await this.setState(dev.stateId('hideNotification'), dev.hideNotification, true);
 			}
 			this.devices.push(dev);
 		}
