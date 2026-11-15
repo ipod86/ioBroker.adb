@@ -287,7 +287,7 @@ class AndroidDevice {
         "dumpsys notification --noredact | grep 'channel=DEVELOPER_IMPORTANT' | grep -o 'key=[^ ]*'"
       );
       for (const line of dump.split(/\r?\n/)) {
-        const key = line.trim().replace(/^key=/, "");
+        const key = line.trim().replace(/^key=/, "").replace(/:$/, "");
         if (/^-?\d+\|android\|\d+\|/.test(key)) {
           keys.add(key);
         }
