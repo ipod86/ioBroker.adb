@@ -197,7 +197,7 @@ class AdbAdapter extends utils.Adapter {
           this.sendTo(obj.from, obj.command, this.qrCode().text, obj.callback);
           return;
         case "qrPair":
-          answer = await this.pairWithQr(msg);
+          answer = await this.pairWithQr();
           break;
         case "discover":
           answer = await this.discover(msg);
@@ -276,10 +276,9 @@ class AdbAdapter extends utils.Adapter {
         this.log.warn(`Pairing with QR code failed: ${qr.done.error}`);
       }
     }
-    if (qr.listeners.length) {
-      qr.listeners.forEach((l) => l(qr.done));
-      qr.listeners = [];
-    } else if (qr.done.ip) {
+    qr.listeners.forEach((l) => l(qr.done));
+    qr.listeners = [];
+    if (qr.done.ip) {
       await this.addDeviceToConfig(qr.done.ip);
     }
   }
@@ -300,10 +299,8 @@ class AdbAdapter extends utils.Adapter {
   }
   /**
    * Answer for "wait for the device": result of the QR pairing, waits up to 60 seconds.
-   *
-   * @param msg devices from the form
    */
-  async pairWithQr(msg) {
+  async pairWithQr() {
     var _a;
     const qr = this.qr;
     if (!qr) {
@@ -324,7 +321,7 @@ class AdbAdapter extends utils.Adapter {
     if (!result.ip) {
       return { error: result.error };
     }
-    return this.pairedAnswer(result.ip, msg.devices);
+    return { result: "pairedAdded", args: [result.ip], reloadBrowser: true };
   }
   /**
    * Sends the pairing request to the adb server.

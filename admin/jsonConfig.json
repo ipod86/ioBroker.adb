@@ -170,7 +170,7 @@
 				},
 				"qrSteps": {
 					"type": "staticText",
-					"text": "Show the QR code and scan it on the device in Wireless debugging \u2192 \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.",
+					"text": "Show the QR code and scan it on the device in Wireless debugging → \"Pair device with QR code\" (not with the camera app). The device is paired and added to the device list by itself. \"Wait for the device\" shows the result.",
 					"xs": 12,
 					"sm": 12,
 					"md": 12,
@@ -193,12 +193,10 @@
 					"type": "sendTo",
 					"label": "Wait for the device (60 s)",
 					"command": "qrPair",
-					"jsonData": "{\"devices\": ${JSON.stringify(data.devices || [])}}",
 					"variant": "contained",
 					"icon": "auth",
 					"showProcess": true,
 					"timeout": 75000,
-					"useNative": true,
 					"xs": 12,
 					"sm": 6,
 					"md": 4,
@@ -207,7 +205,8 @@
 					"result": {
 						"paired": "Paired with %s. The device will be connected within a few seconds.",
 						"pairedAdded": "Paired with %s and added to the device list. Please save the settings."
-					}
+					},
+					"reloadBrowser": true
 				}
 			}
 		},
