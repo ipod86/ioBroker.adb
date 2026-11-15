@@ -18,6 +18,7 @@
 	"Found in the network:\n%s": "Gevonden in het netwerk:\n%s",
 	"Hide debug notice": "Foutopsporingsmelding verbergen",
 	"IP address": "IP-adres",
+	"Info every (s, 0 = off)": "Info elke (s, 0 = uit)",
 	"Name": "Naam",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Geen apparaat gevonden. Is draadloze foutopsporing ingeschakeld en bevindt het apparaat zich in hetzelfde netwerk?",
 	"No device has scanned the QR code": "Geen enkel apparaat heeft de QR-code gescand",

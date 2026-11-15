@@ -17,7 +17,7 @@ Steuert Android-Geräte – Handys, Tablets, TV-Boxen, Android TV – über die 
 - **Fester Port** für TV-Boxen und Geräte, die mit `adb tcpip 5555` umgestellt sind, wie bisher.
 - **Automatisches Wiederverbinden**, wenn ein Gerät aus, im Ruhezustand oder nicht im Netz war.
 - **Befehle:** Shell-Befehl mit Antwort, Taste senden, Apps starten und beenden, Neustart, Bildschirmfoto.
-- **Geräte-Infos:** Modell, Android-Version, aktueller Port und ein verständlicher Verbindungsstatus.
+- **Geräte-Infos:** Modell, Android-Version, aktueller Port, verständlicher Verbindungsstatus – und solange verbunden Akku, Laden, Bildschirm an, App im Vordergrund, WLAN-Signal, Nicht stören und freier Speicher.
 - **Netzwerksuche:** zeigt alle Geräte, die kabelloses Debugging anbieten.
 
 ## Voraussetzungen
@@ -90,6 +90,21 @@ Android schaltet kabelloses Debugging bei jedem Neustart aus und oft auch, wenn 
 Etwa 30–60 Sekunden nach dem Hochfahren ist der Adapter wieder verbunden – mit dem neuen Port.
 
 Hinweis: Kabelloses Debugging ist dann in deinem Heimnetz ständig an. Verbinden können sich nur gekoppelte Geräte; ein neues Gerät müsste erst koppeln, und dafür braucht es den Code oder QR-Code, den nur das Handy anzeigt.
+
+### Geräte-Infos
+
+Solange ein Gerät verbunden ist, liest der Adapter alle 60 Sekunden ein paar Werte in den Ordner `info` des Geräts (Spalte **Infos alle** in der Geräteliste, `0` = aus):
+
+| Datenpunkt | Bedeutung |
+|---|---|
+| `info.batteryLevel`, `info.charging`, `info.chargeSource`, `info.batteryTemperature` | Akkustand (%), lädt, Stromquelle (`ac`, `usb`, `wireless`, `dock`, `none`), Akkutemperatur (°C) – nur bei Geräten mit Akku |
+| `info.screenOn` | Bildschirm an |
+| `info.currentApp` | Paketname der App im Vordergrund |
+| `info.wifiSsid`, `info.wifiRssi` | WLAN-Netz und Signalstärke (dBm) |
+| `info.doNotDisturb` | „Nicht stören“ – lässt sich auch schalten |
+| `info.storageFree` | freier Speicher (GB), einmal pro Stunde gelesen |
+
+Die Werte werden mit einem kurzen Befehl pro Intervall gelesen; das weckt den Bildschirm nicht und kostet kaum Akku. Ist das Gerät nicht verbunden, wird nichts abgefragt.
 
 ### Debugging-Benachrichtigung ausblenden
 

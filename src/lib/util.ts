@@ -11,6 +11,8 @@ export interface DeviceConfig {
 	port: string | number;
 	/** Package name of the automation app that switches wireless debugging on after a reboot */
 	automationApp?: string;
+	/** Interval of the info values in seconds, 0 = off (default 60) */
+	pollInterval?: number;
 	/** Hide the "wireless debugging connected" notification */
 	hideNotification?: boolean;
 }
@@ -224,4 +226,98 @@ export const ADB_MIN_PAIRING = 30;
  */
 export function legacyObjectId(ip: string, port: number): string {
 	return `${ip.trim()}:${port}`.replace(/\./g, '_');
+}
+
+/** Values read periodically from a device */
+export interface DeviceInfo {
+	battery?: { present: boolean; level?: number; charging?: boolean; source?: string; temperature?: number };
+	screenOn?: boolean;
+	currentApp?: string;
+	wifiSsid?: string;
+	wifiRssi?: number;
+	doNotDisturb?: boolean;
+	storageFreeGB?: number;
+}
+
+/** Separator between the parts of the info command */
+export const INFO_SEPARATOR = '@@adb-info@@';
+
+/**
+ * Shell command that reads all info values in one go.
+ *
+ * @param withStorage also read the free storage (slower, done less often)
+ */
+export function infoCommand(withStorage: boolean): string {
+	const parts = [
+		'dumpsys battery',
+		'dumpsys power | grep mWakefulness=',
+		"dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'",
+		'dumpsys wifi | grep -m1 mWifiInfo',
+		'settings get global zen_mode',
+	];
+	if (withStorage) {
+		parts.push('df /data | tail -1');
+	}
+	return parts.join(`; echo ${INFO_SEPARATOR}; `);
+}
+
+/**
+ * Parses the output of infoCommand().
+ *
+ * @param output command output
+ */
+export function parseInfo(output: string): DeviceInfo {
+	const [battery = '', power = '', window = '', wifi = '', zen = '', storage = ''] = output.split(INFO_SEPARATOR);
+	const info: DeviceInfo = {};
+
+	// only the indented lines of the current state, not the history some devices print
+	const field = (name: string): string | undefined =>
+		new RegExp(`^ {1,2}${name}: (.+)$`, 'mi').exec(battery)?.[1]?.trim();
+	if (field('level') !== undefined) {
+		const present = field('present') !== 'false';
+		info.battery = { present };
+		if (present) {
+			const level = parseInt(field('level') ?? '', 10);
+			const status = parseInt(field('status') ?? '', 10);
+			const temp = parseInt(field('temperature') ?? '', 10);
+			const source = ['AC', 'USB', 'Wireless', 'Dock'].find(s => field(`${s} powered`) === 'true');
+			info.battery.level = Number.isNaN(level) ? undefined : level;
+			// 2 = charging, 5 = full (still on the charger)
+			info.battery.charging = status === 2;
+			info.battery.source = source ? source.toLowerCase() : 'none';
+			info.battery.temperature = Number.isNaN(temp) ? undefined : temp / 10;
+		}
+	}
+
+	const wake = /mWakefulness=(\w+)/.exec(power)?.[1];
+	if (wake && !/^\d+$/.test(wake)) {
+		info.screenOn = wake === 'Awake';
+	}
+
+	const app =
+		/mCurrentFocus=Window\{\S+ \S+ ([\w.]+)\//.exec(window)?.[1] ??
+		/mFocusedApp=ActivityRecord\{\S+ \S+ ([\w.]+)\//.exec(window)?.[1];
+	if (app) {
+		info.currentApp = app;
+	}
+
+	if (wifi.includes('mWifiInfo')) {
+		const ssid = /SSID: "([^"]*)"/.exec(wifi)?.[1];
+		const rssi = parseInt(/RSSI: (-?\d+)/.exec(wifi)?.[1] ?? '', 10);
+		info.wifiSsid = ssid && ssid !== '<unknown ssid>' ? ssid : '';
+		if (!Number.isNaN(rssi) && rssi < 0 && rssi > -127) {
+			info.wifiRssi = rssi;
+		}
+	}
+
+	const z = zen.trim();
+	if (/^\d+$/.test(z)) {
+		info.doNotDisturb = z !== '0';
+	}
+
+	const df = storage.trim().split(/\s+/);
+	if (df.length >= 4 && /^\d+$/.test(df[3])) {
+		info.storageFreeGB = Math.round((parseInt(df[3], 10) / 1024 / 1024) * 10) / 10;
+	}
+	return info;
 }

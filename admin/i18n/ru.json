@@ -18,6 +18,7 @@
 	"Found in the network:\n%s": "В сети нашел:\n%s",
 	"Hide debug notice": "Скрыть уведомление об отладке",
 	"IP address": "IP-адрес",
+	"Info every (s, 0 = off)": "Информация каждые (с, 0 = выкл.)",
 	"Name": "Имя",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Устройство не найдено. Включена ли беспроводная отладка и устройство находится в одной сети?",
 	"No device has scanned the QR code": "Ни одно устройство не отсканировало QR-код",

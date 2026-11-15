@@ -37,14 +37,14 @@
 							"type": "text",
 							"attr": "name",
 							"title": "Name",
-							"width": "16%",
+							"width": "14%",
 							"default": ""
 						},
 						{
 							"type": "text",
 							"attr": "ip",
 							"title": "IP address",
-							"width": "15%",
+							"width": "14%",
 							"default": "",
 							"validator": "data.ip && data.ip.trim() !== ''",
 							"validatorNoSaveOnError": true,
@@ -54,10 +54,19 @@
 							"type": "text",
 							"attr": "port",
 							"title": "Port (empty = automatic)",
-							"width": "12%",
+							"width": "10%",
 							"default": "",
 							"validator": "!data.port || /^\\d{1,5}$/.test(String(data.port).trim())",
 							"validatorErrorText": "Only digits, or leave empty"
+						},
+						{
+							"type": "number",
+							"attr": "pollInterval",
+							"title": "Info every (s, 0 = off)",
+							"default": 60,
+							"min": 0,
+							"max": 3600,
+							"width": "10%"
 						},
 						{
 							"type": "checkbox",
@@ -65,13 +74,13 @@
 							"title": "Hide debug notice",
 							"default": false,
 							"disabled": "!!data.port",
-							"width": "11%"
+							"width": "10%"
 						},
 						{
 							"type": "selectSendTo",
 							"attr": "automationApp",
 							"title": "App for reboot (optional)",
-							"width": "20%",
+							"width": "18%",
 							"command": "listApps",
 							"jsonData": "{\"ip\": \"${data.ip}\"}",
 							"manual": true,
@@ -85,7 +94,7 @@
 							"type": "sendTo",
 							"attr": "_grant",
 							"title": "Stay connected after reboot",
-							"width": "20%",
+							"width": "18%",
 							"label": "Allow automation app",
 							"command": "grantAutomation",
 							"jsonData": "{\"ip\": \"${data.ip}\", \"app\": \"${data.automationApp || ''}\"}",

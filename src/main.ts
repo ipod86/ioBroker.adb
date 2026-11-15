@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { Adb, type Client } from '@devicefarmer/adbkit';
 import { hostRequest } from './lib/adbHost';
-import { AndroidDevice, DEVICE_STATES, WIRELESS_STATES, errorText } from './lib/device';
+import { AndroidDevice, DEVICE_STATES, INFO_STATES, WIRELESS_STATES, errorText } from './lib/device';
 import { Discovery } from './lib/discovery';
 import {
 	checkDevices,
@@ -121,6 +121,9 @@ class AdbAdapter extends utils.Adapter {
 				if (common.write && (name in DEVICE_STATES || !dev.fixedPort)) {
 					await this.subscribeStatesAsync(dev.stateId(name));
 				}
+			}
+			if (dev.pollMs) {
+				await this.subscribeStatesAsync(dev.infoId('doNotDisturb'));
 			}
 		}
 		this.interval = Math.min(3600, Math.max(10, Number(this.config.reconnectInterval) || 30)) * 1000;
@@ -328,6 +331,30 @@ class AdbAdapter extends utils.Adapter {
 		for (const [id, common] of Object.entries(DEVICE_STATES)) {
 			await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
 		}
+		if (dev.pollMs) {
+			await this.extendObject(`${dev.objectId}.info`, {
+				type: 'channel',
+				common: {
+					name: {
+						en: 'Device info',
+						de: 'Geräte-Infos',
+						ru: 'Информация об устройстве',
+						pt: 'Informações do dispositivo',
+						nl: 'Apparaatinfo',
+						fr: "Infos sur l'appareil",
+						it: 'Info dispositivo',
+						es: 'Información del dispositivo',
+						pl: 'Informacje o urządzeniu',
+						uk: 'Інформація про пристрій',
+						'zh-cn': '设备信息',
+					},
+				},
+				native: {},
+			});
+			for (const [name, common] of Object.entries(INFO_STATES)) {
+				await this.extendObject(dev.infoId(name), { type: 'state', common, native: {} });
+			}
+		}
 		if (!dev.fixedPort) {
 			for (const [id, common] of Object.entries(WIRELESS_STATES)) {
 				await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
@@ -347,6 +374,18 @@ class AdbAdapter extends utils.Adapter {
 		}
 		const parts = id.split('.');
 		const name = parts.pop()!;
+		if (name === 'doNotDisturb' && parts[parts.length - 1] === 'info') {
+			parts.pop();
+			const d = this.devices.find(x => x.objectId === parts[parts.length - 1]);
+			if (d) {
+				try {
+					await d.setDoNotDisturb(state.val === true || state.val === 'true' || state.val === 1);
+				} catch (e) {
+					this.log.warn(`${d.label}: do not disturb: ${errorText(e)}`);
+				}
+			}
+			return;
+		}
 		const objectId = parts.pop();
 		const dev = this.devices.find(d => d.objectId === objectId);
 		if (dev && !dev.fixedPort && name === 'hideNotification') {

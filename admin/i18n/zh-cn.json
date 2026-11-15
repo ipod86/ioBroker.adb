@@ -18,6 +18,7 @@
 	"Found in the network:\n%s": "在网络上查到：\n%s",
 	"Hide debug notice": "隐藏调试通知",
 	"IP address": "IP地址",
+	"Info every (s, 0 = off)": "信息间隔（s，0 = 关闭）",
 	"Name": "姓名",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "未找到设备。无线调试是否已开启且设备是否在同一网络中？",
 	"No device has scanned the QR code": "没有设备扫描过该二维码",

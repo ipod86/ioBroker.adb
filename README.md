@@ -26,7 +26,7 @@ Control Android devices – phones, tablets, TV boxes, Android TV – through th
 - **Fixed port** for TV boxes and devices switched to `adb tcpip 5555`, as before.
 - **Automatic reconnect** when a device was switched off, asleep or out of the network.
 - **Commands:** shell command with answer, send a key, start and stop apps, reboot, screenshot.
-- **Device info:** model, Android version, current port and a plain-language connection status.
+- **Device info:** model, Android version, current port, plain-language connection status – and while connected battery, charging, screen on, app in the foreground, Wi-Fi signal, do not disturb and free storage.
 - **Network search:** lists all devices that offer wireless debugging.
 
 ## Requirements
@@ -100,6 +100,21 @@ About 30–60 seconds after the phone has started, the adapter is connected agai
 
 Note: wireless debugging is then always on in your home network. Only devices that have been paired can connect; a new device would have to pair first, which needs the code or QR code shown on the phone.
 
+### Device info
+
+While a device is connected, the adapter reads a few values every 60 seconds (column **Info every** in the device list, `0` = off) into the folder `info` of the device:
+
+| State | Description |
+|---|---|
+| `info.batteryLevel`, `info.charging`, `info.chargeSource`, `info.batteryTemperature` | battery level (%), charging, power source (`ac`, `usb`, `wireless`, `dock`, `none`), battery temperature (°C) – only for devices with a battery |
+| `info.screenOn` | screen on |
+| `info.currentApp` | package name of the app in the foreground |
+| `info.wifiSsid`, `info.wifiRssi` | Wi-Fi network and signal strength (dBm) |
+| `info.doNotDisturb` | "do not disturb" – can also be switched |
+| `info.storageFree` | free storage (GB), read once per hour |
+
+The values are read with one short command per interval; it does not wake the screen and costs hardly any battery. Nothing is read while the device is not connected.
+
 ### Hide the debugging notification
 
 While connected, Android shows a permanent notification "Wireless debugging connected". It belongs to Android itself and cannot be switched off in the settings. Tick **Hide debug notice** in the row of the device in the device list (or set the state `hideNotification` to `true` – this switches it until the next adapter restart, the setting decides at start): the adapter snoozes the notification for the longest time Android allows, does it again after every connection and renews it regularly. `false` shows it again.
@@ -149,6 +164,7 @@ Devices with a port keep their states and ids (`adb.0.<ip>:<port>`, with colon a
 
 - (ipod86) Wireless debugging (Android 11+): pairing with QR code or pairing code, automatic port discovery and reconnect
 - (ipod86) Stay connected after a reboot (automation app permission), hide the debugging notification
+- (ipod86) Device info: battery, charging, screen, app in the foreground, Wi-Fi, do not disturb, storage
 - (ipod86) New settings page, new states, check of the adb program; existing devices and ids stay compatible
 - (ipod86) Rewritten in TypeScript with current dependencies; Node.js 22+, js-controller 6+
 

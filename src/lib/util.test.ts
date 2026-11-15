@@ -1,5 +1,8 @@
 import { expect } from 'chai';
 import {
+	INFO_SEPARATOR,
+	infoCommand,
+	parseInfo,
 	checkDevices,
 	cleanShellCommand,
 	deviceObjectId,
@@ -115,5 +118,49 @@ describe('util', () => {
 		]);
 		expect(ok.map(d => d.ip)).to.deep.equal(['192.168.99.76', '192.168.99.80']);
 		expect(problems).to.have.length(2);
+	});
+});
+
+describe('parseInfo', () => {
+	const S = INFO_SEPARATOR;
+	it('reads a phone', () => {
+		const out = [
+			'Current Battery Service state:\n  AC powered: true\n  USB powered: false\n  Wireless powered: false\n  status: 2\n  present: true\n  level: 31\n  temperature: 310\n11-15 16:22:29.820  Sending ACTION_BATTERY_CHANGED: level:26, status:3',
+			'  mWakefulness=Awake\nmWakefulness=1',
+			'  mCurrentFocus=Window{c1984a0 u0 com.anthropic.claude/com.anthropic.claude.MainActivity}\n  mFocusedApp=ActivityRecord{31630696 u0 com.anthropic.claude/.MainActivity t43782}',
+			'mWifiInfo SSID: "meins", BSSID: e8:df, RSSI: -64, Link speed: 144Mbps',
+			'0',
+			'/dev/block/dm-65 232583388 171664964  60787352  74% /data/user/0',
+		].join(S);
+		expect(parseInfo(out)).to.deep.equal({
+			battery: { present: true, level: 31, charging: true, source: 'ac', temperature: 31 },
+			screenOn: true,
+			currentApp: 'com.anthropic.claude',
+			wifiSsid: 'meins',
+			wifiRssi: -64,
+			doNotDisturb: false,
+			storageFreeGB: 58,
+		});
+	});
+
+	it('reads a TV without battery and a sleeping screen', () => {
+		const out = [
+			'  AC powered: true\n  status: 2\n  present: false\n  level: 100',
+			'  mWakefulness=Asleep',
+			'  mCurrentFocus=null\n  mFocusedApp=ActivityRecord{cb06bab u0 com.google.android.youtube.tv/com.x.Main t9201}',
+			'',
+			'2',
+		].join(S);
+		expect(parseInfo(out)).to.deep.equal({
+			battery: { present: false },
+			screenOn: false,
+			currentApp: 'com.google.android.youtube.tv',
+			doNotDisturb: true,
+		});
+	});
+
+	it('infoCommand', () => {
+		expect(infoCommand(false).split(S)).to.have.length(5);
+		expect(infoCommand(true)).to.contain('df /data');
 	});
 });

@@ -18,6 +18,7 @@
 	"Found in the network:\n%s": "Encontrado na rede:\n%s",
 	"Hide debug notice": "Ocultar aviso de depuração",
 	"IP address": "Endereço IP",
+	"Info every (s, 0 = off)": "Informações a cada (s, 0 = desativado)",
 	"Name": "Nome",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Nenhum dispositivo encontrado. A depuração sem fio está ativada e o dispositivo está na mesma rede?",
 	"No device has scanned the QR code": "Nenhum dispositivo leu o código QR",

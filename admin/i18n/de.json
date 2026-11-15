@@ -18,6 +18,7 @@
 	"Found in the network:\n%s": "Im Netzwerk gefunden:\n%s",
 	"Hide debug notice": "Debug-Hinweis ausblenden",
 	"IP address": "IP-Adresse",
+	"Info every (s, 0 = off)": "Infos alle (s, 0 = aus)",
 	"Name": "Name",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Kein Gerät gefunden. Ist kabelloses Debugging eingeschaltet und das Gerät im selben Netzwerk?",
 	"No device has scanned the QR code": "Kein Gerät hat den QR-Code gescannt",

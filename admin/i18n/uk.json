@@ -18,6 +18,7 @@
 	"Found in the network:\n%s": "Знайдено в мережі:\n%s",
 	"Hide debug notice": "Приховати повідомлення про налагодження",
 	"IP address": "IP адреса",
+	"Info every (s, 0 = off)": "Інформація кожні (s, 0 = вимкнено)",
 	"Name": "Ім'я",
 	"No device found. Is wireless debugging switched on and the device in the same network?": "Пристрій не знайдено. Чи ввімкнено бездротове налагодження, а пристрій у тій самій мережі?",
 	"No device has scanned the QR code": "Жоден пристрій не просканував QR-код",

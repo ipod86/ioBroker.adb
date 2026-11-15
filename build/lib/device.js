@@ -19,7 +19,9 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var device_exports = {};
 __export(device_exports, {
   AndroidDevice: () => AndroidDevice,
+  BATTERY_STATES: () => BATTERY_STATES,
   DEVICE_STATES: () => DEVICE_STATES,
+  INFO_STATES: () => INFO_STATES,
   WIRELESS_STATES: () => WIRELESS_STATES,
   errorText: () => errorText
 });
@@ -288,6 +290,207 @@ const WIRELESS_STATES = {
 };
 const SNOOZE_MS = 365 * 24 * 3600 * 1e3;
 const DEFAULT_NOTIFICATION_KEY = "-1|android|62|null|1000";
+const INFO_STATES = {
+  screenOn: {
+    name: {
+      en: "Screen on",
+      de: "Bildschirm an",
+      ru: "\u042D\u043A\u0440\u0430\u043D \u0432\u043A\u043B\u044E\u0447\u0451\u043D",
+      pt: "Tela ligada",
+      nl: "Scherm aan",
+      fr: "\xC9cran allum\xE9",
+      it: "Schermo acceso",
+      es: "Pantalla encendida",
+      pl: "Ekran w\u0142\u0105czony",
+      uk: "\u0415\u043A\u0440\u0430\u043D \u0443\u0432\u0456\u043C\u043A\u043D\u0435\u043D\u043E",
+      "zh-cn": "\u5C4F\u5E55\u5F00\u542F"
+    },
+    type: "boolean",
+    role: "indicator",
+    read: true,
+    write: false
+  },
+  currentApp: {
+    name: {
+      en: "App in the foreground",
+      de: "App im Vordergrund",
+      ru: "\u041F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043D\u0430 \u043F\u0435\u0440\u0435\u0434\u043D\u0435\u043C \u043F\u043B\u0430\u043D\u0435",
+      pt: "App em primeiro plano",
+      nl: "App op de voorgrond",
+      fr: "Application au premier plan",
+      it: "App in primo piano",
+      es: "App en primer plano",
+      pl: "Aplikacja na pierwszym planie",
+      uk: "\u0417\u0430\u0441\u0442\u043E\u0441\u0443\u043D\u043E\u043A \u043D\u0430 \u043F\u0435\u0440\u0435\u0434\u043D\u044C\u043E\u043C\u0443 \u043F\u043B\u0430\u043D\u0456",
+      "zh-cn": "\u524D\u53F0\u5E94\u7528"
+    },
+    type: "string",
+    role: "text",
+    read: true,
+    write: false
+  },
+  wifiSsid: {
+    name: {
+      en: "Wi-Fi network",
+      de: "WLAN-Netz",
+      ru: "\u0421\u0435\u0442\u044C Wi-Fi",
+      pt: "Rede Wi-Fi",
+      nl: "Wifi-netwerk",
+      fr: "R\xE9seau Wi-Fi",
+      it: "Rete Wi-Fi",
+      es: "Red Wi-Fi",
+      pl: "Sie\u0107 Wi-Fi",
+      uk: "\u041C\u0435\u0440\u0435\u0436\u0430 Wi-Fi",
+      "zh-cn": "Wi-Fi \u7F51\u7EDC"
+    },
+    type: "string",
+    role: "text",
+    read: true,
+    write: false
+  },
+  wifiRssi: {
+    name: {
+      en: "Wi-Fi signal strength",
+      de: "WLAN-Signalst\xE4rke",
+      ru: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C \u0441\u0438\u0433\u043D\u0430\u043B\u0430 Wi-Fi",
+      pt: "Intensidade do sinal Wi-Fi",
+      nl: "Wifi-signaalsterkte",
+      fr: "Puissance du signal Wi-Fi",
+      it: "Potenza del segnale Wi-Fi",
+      es: "Intensidad de la se\xF1al Wi-Fi",
+      pl: "Si\u0142a sygna\u0142u Wi-Fi",
+      uk: "\u0420\u0456\u0432\u0435\u043D\u044C \u0441\u0438\u0433\u043D\u0430\u043B\u0443 Wi-Fi",
+      "zh-cn": "Wi-Fi \u4FE1\u53F7\u5F3A\u5EA6"
+    },
+    type: "number",
+    role: "value.rssi",
+    unit: "dBm",
+    read: true,
+    write: false
+  },
+  doNotDisturb: {
+    name: {
+      en: "Do not disturb",
+      de: "Nicht st\xF6ren",
+      ru: "\u041D\u0435 \u0431\u0435\u0441\u043F\u043E\u043A\u043E\u0438\u0442\u044C",
+      pt: "N\xE3o perturbe",
+      nl: "Niet storen",
+      fr: "Ne pas d\xE9ranger",
+      it: "Non disturbare",
+      es: "No molestar",
+      pl: "Nie przeszkadza\u0107",
+      uk: "\u041D\u0435 \u0442\u0443\u0440\u0431\u0443\u0432\u0430\u0442\u0438",
+      "zh-cn": "\u52FF\u6270\u6A21\u5F0F"
+    },
+    type: "boolean",
+    role: "switch.mode.silent",
+    read: true,
+    write: true
+  },
+  storageFree: {
+    name: {
+      en: "Free storage",
+      de: "Freier Speicher",
+      ru: "\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u0430\u044F \u043F\u0430\u043C\u044F\u0442\u044C",
+      pt: "Armazenamento livre",
+      nl: "Vrije opslag",
+      fr: "Stockage libre",
+      it: "Spazio libero",
+      es: "Almacenamiento libre",
+      pl: "Wolne miejsce",
+      uk: "\u0412\u0456\u043B\u044C\u043D\u0430 \u043F\u0430\u043C\u2019\u044F\u0442\u044C",
+      "zh-cn": "\u53EF\u7528\u5B58\u50A8"
+    },
+    type: "number",
+    role: "value",
+    unit: "GB",
+    read: true,
+    write: false
+  }
+};
+const BATTERY_STATES = {
+  batteryLevel: {
+    name: {
+      en: "Battery level",
+      de: "Akkustand",
+      ru: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C \u0437\u0430\u0440\u044F\u0434\u0430",
+      pt: "N\xEDvel da bateria",
+      nl: "Batterijniveau",
+      fr: "Niveau de batterie",
+      it: "Livello batteria",
+      es: "Nivel de bater\xEDa",
+      pl: "Poziom baterii",
+      uk: "\u0420\u0456\u0432\u0435\u043D\u044C \u0437\u0430\u0440\u044F\u0434\u0443",
+      "zh-cn": "\u7535\u6C60\u7535\u91CF"
+    },
+    type: "number",
+    role: "value.battery",
+    unit: "%",
+    min: 0,
+    max: 100,
+    read: true,
+    write: false
+  },
+  charging: {
+    name: {
+      en: "Charging",
+      de: "L\xE4dt",
+      ru: "\u0417\u0430\u0440\u044F\u0436\u0430\u0435\u0442\u0441\u044F",
+      pt: "Carregando",
+      nl: "Laden",
+      fr: "En charge",
+      it: "In carica",
+      es: "Cargando",
+      pl: "\u0141adowanie",
+      uk: "\u0417\u0430\u0440\u044F\u0434\u0436\u0430\u0454\u0442\u044C\u0441\u044F",
+      "zh-cn": "\u5145\u7535\u4E2D"
+    },
+    type: "boolean",
+    role: "indicator",
+    read: true,
+    write: false
+  },
+  chargeSource: {
+    name: {
+      en: "Power source",
+      de: "Stromquelle",
+      ru: "\u0418\u0441\u0442\u043E\u0447\u043D\u0438\u043A \u043F\u0438\u0442\u0430\u043D\u0438\u044F",
+      pt: "Fonte de energia",
+      nl: "Stroombron",
+      fr: "Source d'alimentation",
+      it: "Fonte di alimentazione",
+      es: "Fuente de alimentaci\xF3n",
+      pl: "\u0179r\xF3d\u0142o zasilania",
+      uk: "\u0414\u0436\u0435\u0440\u0435\u043B\u043E \u0436\u0438\u0432\u043B\u0435\u043D\u043D\u044F",
+      "zh-cn": "\u7535\u6E90"
+    },
+    type: "string",
+    role: "text",
+    read: true,
+    write: false,
+    states: { none: "none", ac: "ac", usb: "usb", wireless: "wireless", dock: "dock" }
+  },
+  batteryTemperature: {
+    name: {
+      en: "Battery temperature",
+      de: "Akkutemperatur",
+      ru: "\u0422\u0435\u043C\u043F\u0435\u0440\u0430\u0442\u0443\u0440\u0430 \u0431\u0430\u0442\u0430\u0440\u0435\u0438",
+      pt: "Temperatura da bateria",
+      nl: "Batterijtemperatuur",
+      fr: "Temp\xE9rature de la batterie",
+      it: "Temperatura della batteria",
+      es: "Temperatura de la bater\xEDa",
+      pl: "Temperatura baterii",
+      uk: "\u0422\u0435\u043C\u043F\u0435\u0440\u0430\u0442\u0443\u0440\u0430 \u0431\u0430\u0442\u0430\u0440\u0435\u0457",
+      "zh-cn": "\u7535\u6C60\u6E29\u5EA6"
+    },
+    type: "number",
+    role: "value.temperature",
+    unit: "\xB0C",
+    read: true,
+    write: false
+  }
+};
 const SHELL_MS = 12e4;
 const WAIT_MS = 1e4;
 class AndroidDevice {
@@ -305,6 +508,8 @@ class AndroidDevice {
     this.ip = cfg.ip;
     this.name = cfg.name || cfg.ip;
     this.fixedPort = (0, import_util.parsePort)(cfg.port);
+    const poll = cfg.pollInterval === void 0 || cfg.pollInterval === null ? 60 : Number(cfg.pollInterval);
+    this.pollMs = Number.isFinite(poll) && poll > 0 ? Math.min(3600, Math.max(10, poll)) * 1e3 : 0;
     this.objectId = objectId != null ? objectId : (0, import_util.deviceObjectId)(this.ip, this.fixedPort);
   }
   ip;
@@ -319,6 +524,11 @@ class AndroidDevice {
   infoRead = false;
   /** Hide the debugging notification */
   hideNotification = false;
+  /** Interval of the info values in ms, 0 = off */
+  pollMs;
+  pollTimer;
+  lastStorage = 0;
+  batteryCreated = false;
   /** Apps installed on the device (read when connected) */
   apps = [];
   notifyTimer;
@@ -502,6 +712,12 @@ class AndroidDevice {
         this.adapter.log.info(`${this.label} connected`);
       }
     }
+    if (on && this.pollMs && !this.pollTimer) {
+      this.pollTimer = this.adapter.setTimeout(() => void this.poll(), 2e3);
+    } else if (!on) {
+      this.adapter.clearTimeout(this.pollTimer);
+      this.pollTimer = void 0;
+    }
     await this.adapter.setState(this.stateId("connection"), { val: on, ack: true });
   }
   /**
@@ -642,6 +858,73 @@ class AndroidDevice {
       );
     });
   }
+  /** Reads the info values and schedules the next run while connected. */
+  async poll() {
+    if (!this.connected) {
+      this.pollTimer = void 0;
+      return;
+    }
+    try {
+      const withStorage = Date.now() - this.lastStorage > 36e5;
+      const info = (0, import_util.parseInfo)(await this.readShell((0, import_util.infoCommand)(withStorage)));
+      if (withStorage) {
+        this.lastStorage = Date.now();
+      }
+      await this.writeInfo(info);
+    } catch (e) {
+      this.adapter.log.debug(`${this.label}: reading info failed: ${errorText(e)}`);
+    }
+    this.pollTimer = this.connected ? this.adapter.setTimeout(() => void this.poll(), this.pollMs) : void 0;
+  }
+  /**
+   * Writes the info values to the states.
+   *
+   * @param info parsed values
+   */
+  async writeInfo(info) {
+    var _a;
+    const set = async (name, val) => {
+      if (val !== void 0) {
+        await this.adapter.setState(this.infoId(name), { val, ack: true });
+      }
+    };
+    if ((_a = info.battery) == null ? void 0 : _a.present) {
+      if (!this.batteryCreated) {
+        for (const [name, common] of Object.entries(BATTERY_STATES)) {
+          await this.adapter.extendObject(this.infoId(name), { type: "state", common, native: {} });
+        }
+        this.batteryCreated = true;
+      }
+      await set("batteryLevel", info.battery.level);
+      await set("charging", info.battery.charging);
+      await set("chargeSource", info.battery.source);
+      await set("batteryTemperature", info.battery.temperature);
+    }
+    await set("screenOn", info.screenOn);
+    await set("currentApp", info.currentApp);
+    await set("wifiSsid", info.wifiSsid);
+    await set("wifiRssi", info.wifiRssi);
+    await set("doNotDisturb", info.doNotDisturb);
+    await set("storageFree", info.storageFreeGB);
+  }
+  /**
+   * Switches "do not disturb" on the device.
+   *
+   * @param on true = on
+   */
+  async setDoNotDisturb(on) {
+    await this.run(`cmd notification set_dnd ${on ? "on" : "off"}`);
+    const z = await this.run("settings get global zen_mode");
+    await this.adapter.setState(this.infoId("doNotDisturb"), { val: z.trim() !== "0", ack: true });
+  }
+  /**
+   * Full id of an info state.
+   *
+   * @param name state name
+   */
+  infoId(name) {
+    return `${this.objectId}.info.${name}`;
+  }
   /** Takes a screenshot and stores it as file. */
   async screencap() {
     const png = (0, import_util.extractPng)(await import_adbkit.Adb.util.readAll(await this.device().screencap()));
@@ -669,6 +952,8 @@ class AndroidDevice {
   /** Closes the connection */
   async close() {
     this.adapter.clearTimeout(this.notifyTimer);
+    this.adapter.clearTimeout(this.pollTimer);
+    this.pollTimer = void 0;
     if (this.serial) {
       await this.client.disconnect(this.ip, (0, import_util.portOfSerial)(this.serial)).catch(() => void 0);
     }
@@ -680,7 +965,9 @@ function errorText(e) {
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AndroidDevice,
+  BATTERY_STATES,
   DEVICE_STATES,
+  INFO_STATES,
   WIRELESS_STATES,
   errorText
 });

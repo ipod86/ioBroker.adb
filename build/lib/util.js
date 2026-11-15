@@ -20,11 +20,13 @@ var util_exports = {};
 __export(util_exports, {
   ADB_MIN_PAIRING: () => ADB_MIN_PAIRING,
   AUTOMATION_APPS: () => AUTOMATION_APPS,
+  INFO_SEPARATOR: () => INFO_SEPARATOR,
   checkDevices: () => checkDevices,
   cleanShellCommand: () => cleanShellCommand,
   deviceObjectId: () => deviceObjectId,
   extractPng: () => extractPng,
   hostOfSerial: () => hostOfSerial,
+  infoCommand: () => infoCommand,
   isPackageName: () => isPackageName,
   isValidPairingCode: () => isValidPairingCode,
   legacyObjectId: () => legacyObjectId,
@@ -32,6 +34,7 @@ __export(util_exports, {
   pairSucceeded: () => pairSucceeded,
   pairingQrText: () => pairingQrText,
   parseAdbVersion: () => parseAdbVersion,
+  parseInfo: () => parseInfo,
   parsePackages: () => parsePackages,
   parsePort: () => parsePort,
   portOfSerial: () => portOfSerial,
@@ -130,15 +133,79 @@ const ADB_MIN_PAIRING = 30;
 function legacyObjectId(ip, port) {
   return `${ip.trim()}:${port}`.replace(/\./g, "_");
 }
+const INFO_SEPARATOR = "@@adb-info@@";
+function infoCommand(withStorage) {
+  const parts = [
+    "dumpsys battery",
+    "dumpsys power | grep mWakefulness=",
+    "dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'",
+    "dumpsys wifi | grep -m1 mWifiInfo",
+    "settings get global zen_mode"
+  ];
+  if (withStorage) {
+    parts.push("df /data | tail -1");
+  }
+  return parts.join(`; echo ${INFO_SEPARATOR}; `);
+}
+function parseInfo(output) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+  const [battery = "", power = "", window = "", wifi = "", zen = "", storage = ""] = output.split(INFO_SEPARATOR);
+  const info = {};
+  const field = (name) => {
+    var _a2, _b2;
+    return (_b2 = (_a2 = new RegExp(`^ {1,2}${name}: (.+)$`, "mi").exec(battery)) == null ? void 0 : _a2[1]) == null ? void 0 : _b2.trim();
+  };
+  if (field("level") !== void 0) {
+    const present = field("present") !== "false";
+    info.battery = { present };
+    if (present) {
+      const level = parseInt((_a = field("level")) != null ? _a : "", 10);
+      const status = parseInt((_b = field("status")) != null ? _b : "", 10);
+      const temp = parseInt((_c = field("temperature")) != null ? _c : "", 10);
+      const source = ["AC", "USB", "Wireless", "Dock"].find((s) => field(`${s} powered`) === "true");
+      info.battery.level = Number.isNaN(level) ? void 0 : level;
+      info.battery.charging = status === 2;
+      info.battery.source = source ? source.toLowerCase() : "none";
+      info.battery.temperature = Number.isNaN(temp) ? void 0 : temp / 10;
+    }
+  }
+  const wake = (_d = /mWakefulness=(\w+)/.exec(power)) == null ? void 0 : _d[1];
+  if (wake && !/^\d+$/.test(wake)) {
+    info.screenOn = wake === "Awake";
+  }
+  const app = (_g = (_e = /mCurrentFocus=Window\{\S+ \S+ ([\w.]+)\//.exec(window)) == null ? void 0 : _e[1]) != null ? _g : (_f = /mFocusedApp=ActivityRecord\{\S+ \S+ ([\w.]+)\//.exec(window)) == null ? void 0 : _f[1];
+  if (app) {
+    info.currentApp = app;
+  }
+  if (wifi.includes("mWifiInfo")) {
+    const ssid = (_h = /SSID: "([^"]*)"/.exec(wifi)) == null ? void 0 : _h[1];
+    const rssi = parseInt((_j = (_i = /RSSI: (-?\d+)/.exec(wifi)) == null ? void 0 : _i[1]) != null ? _j : "", 10);
+    info.wifiSsid = ssid && ssid !== "<unknown ssid>" ? ssid : "";
+    if (!Number.isNaN(rssi) && rssi < 0 && rssi > -127) {
+      info.wifiRssi = rssi;
+    }
+  }
+  const z = zen.trim();
+  if (/^\d+$/.test(z)) {
+    info.doNotDisturb = z !== "0";
+  }
+  const df = storage.trim().split(/\s+/);
+  if (df.length >= 4 && /^\d+$/.test(df[3])) {
+    info.storageFreeGB = Math.round(parseInt(df[3], 10) / 1024 / 1024 * 10) / 10;
+  }
+  return info;
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ADB_MIN_PAIRING,
   AUTOMATION_APPS,
+  INFO_SEPARATOR,
   checkDevices,
   cleanShellCommand,
   deviceObjectId,
   extractPng,
   hostOfSerial,
+  infoCommand,
   isPackageName,
   isValidPairingCode,
   legacyObjectId,
@@ -146,6 +213,7 @@ function legacyObjectId(ip, port) {
   pairSucceeded,
   pairingQrText,
   parseAdbVersion,
+  parseInfo,
   parsePackages,
   parsePort,
   portOfSerial,

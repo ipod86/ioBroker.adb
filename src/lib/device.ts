@@ -5,6 +5,9 @@ import {
 	deviceObjectId,
 	extractPng,
 	hostOfSerial,
+	infoCommand,
+	parseInfo,
+	type DeviceInfo,
 	parsePackages,
 	parsePort,
 	portOfSerial,
@@ -282,8 +285,213 @@ const SNOOZE_MS = 365 * 24 * 3600 * 1000;
 /** Key of the wireless debugging notification in Android (SystemMessage.NOTE_ADB_WIFI_ACTIVE) */
 const DEFAULT_NOTIFICATION_KEY = '-1|android|62|null|1000';
 
+/** Info values read periodically while the device is connected (folder "info" of the device) */
+export const INFO_STATES: Record<string, ioBroker.StateCommon> = {
+	screenOn: {
+		name: {
+			en: 'Screen on',
+			de: 'Bildschirm an',
+			ru: 'Экран включён',
+			pt: 'Tela ligada',
+			nl: 'Scherm aan',
+			fr: 'Écran allumé',
+			it: 'Schermo acceso',
+			es: 'Pantalla encendida',
+			pl: 'Ekran włączony',
+			uk: 'Екран увімкнено',
+			'zh-cn': '屏幕开启',
+		},
+		type: 'boolean',
+		role: 'indicator',
+		read: true,
+		write: false,
+	},
+	currentApp: {
+		name: {
+			en: 'App in the foreground',
+			de: 'App im Vordergrund',
+			ru: 'Приложение на переднем плане',
+			pt: 'App em primeiro plano',
+			nl: 'App op de voorgrond',
+			fr: 'Application au premier plan',
+			it: 'App in primo piano',
+			es: 'App en primer plano',
+			pl: 'Aplikacja na pierwszym planie',
+			uk: 'Застосунок на передньому плані',
+			'zh-cn': '前台应用',
+		},
+		type: 'string',
+		role: 'text',
+		read: true,
+		write: false,
+	},
+	wifiSsid: {
+		name: {
+			en: 'Wi-Fi network',
+			de: 'WLAN-Netz',
+			ru: 'Сеть Wi-Fi',
+			pt: 'Rede Wi-Fi',
+			nl: 'Wifi-netwerk',
+			fr: 'Réseau Wi-Fi',
+			it: 'Rete Wi-Fi',
+			es: 'Red Wi-Fi',
+			pl: 'Sieć Wi-Fi',
+			uk: 'Мережа Wi-Fi',
+			'zh-cn': 'Wi-Fi 网络',
+		},
+		type: 'string',
+		role: 'text',
+		read: true,
+		write: false,
+	},
+	wifiRssi: {
+		name: {
+			en: 'Wi-Fi signal strength',
+			de: 'WLAN-Signalstärke',
+			ru: 'Уровень сигнала Wi-Fi',
+			pt: 'Intensidade do sinal Wi-Fi',
+			nl: 'Wifi-signaalsterkte',
+			fr: 'Puissance du signal Wi-Fi',
+			it: 'Potenza del segnale Wi-Fi',
+			es: 'Intensidad de la señal Wi-Fi',
+			pl: 'Siła sygnału Wi-Fi',
+			uk: 'Рівень сигналу Wi-Fi',
+			'zh-cn': 'Wi-Fi 信号强度',
+		},
+		type: 'number',
+		role: 'value.rssi',
+		unit: 'dBm',
+		read: true,
+		write: false,
+	},
+	doNotDisturb: {
+		name: {
+			en: 'Do not disturb',
+			de: 'Nicht stören',
+			ru: 'Не беспокоить',
+			pt: 'Não perturbe',
+			nl: 'Niet storen',
+			fr: 'Ne pas déranger',
+			it: 'Non disturbare',
+			es: 'No molestar',
+			pl: 'Nie przeszkadzać',
+			uk: 'Не турбувати',
+			'zh-cn': '勿扰模式',
+		},
+		type: 'boolean',
+		role: 'switch.mode.silent',
+		read: true,
+		write: true,
+	},
+	storageFree: {
+		name: {
+			en: 'Free storage',
+			de: 'Freier Speicher',
+			ru: 'Свободная память',
+			pt: 'Armazenamento livre',
+			nl: 'Vrije opslag',
+			fr: 'Stockage libre',
+			it: 'Spazio libero',
+			es: 'Almacenamiento libre',
+			pl: 'Wolne miejsce',
+			uk: 'Вільна пам’ять',
+			'zh-cn': '可用存储',
+		},
+		type: 'number',
+		role: 'value',
+		unit: 'GB',
+		read: true,
+		write: false,
+	},
+};
+
+/** Battery values, only for devices that have a battery */
+export const BATTERY_STATES: Record<string, ioBroker.StateCommon> = {
+	batteryLevel: {
+		name: {
+			en: 'Battery level',
+			de: 'Akkustand',
+			ru: 'Уровень заряда',
+			pt: 'Nível da bateria',
+			nl: 'Batterijniveau',
+			fr: 'Niveau de batterie',
+			it: 'Livello batteria',
+			es: 'Nivel de batería',
+			pl: 'Poziom baterii',
+			uk: 'Рівень заряду',
+			'zh-cn': '电池电量',
+		},
+		type: 'number',
+		role: 'value.battery',
+		unit: '%',
+		min: 0,
+		max: 100,
+		read: true,
+		write: false,
+	},
+	charging: {
+		name: {
+			en: 'Charging',
+			de: 'Lädt',
+			ru: 'Заряжается',
+			pt: 'Carregando',
+			nl: 'Laden',
+			fr: 'En charge',
+			it: 'In carica',
+			es: 'Cargando',
+			pl: 'Ładowanie',
+			uk: 'Заряджається',
+			'zh-cn': '充电中',
+		},
+		type: 'boolean',
+		role: 'indicator',
+		read: true,
+		write: false,
+	},
+	chargeSource: {
+		name: {
+			en: 'Power source',
+			de: 'Stromquelle',
+			ru: 'Источник питания',
+			pt: 'Fonte de energia',
+			nl: 'Stroombron',
+			fr: "Source d'alimentation",
+			it: 'Fonte di alimentazione',
+			es: 'Fuente de alimentación',
+			pl: 'Źródło zasilania',
+			uk: 'Джерело живлення',
+			'zh-cn': '电源',
+		},
+		type: 'string',
+		role: 'text',
+		read: true,
+		write: false,
+		states: { none: 'none', ac: 'ac', usb: 'usb', wireless: 'wireless', dock: 'dock' },
+	},
+	batteryTemperature: {
+		name: {
+			en: 'Battery temperature',
+			de: 'Akkutemperatur',
+			ru: 'Температура батареи',
+			pt: 'Temperatura da bateria',
+			nl: 'Batterijtemperatuur',
+			fr: 'Température de la batterie',
+			it: 'Temperatura della batteria',
+			es: 'Temperatura de la batería',
+			pl: 'Temperatura baterii',
+			uk: 'Температура батареї',
+			'zh-cn': '电池温度',
+		},
+		type: 'number',
+		role: 'value.temperature',
+		unit: '°C',
+		read: true,
+		write: false,
+	},
+};
+
 /** What the device needs from the adapter */
-export interface DeviceHost extends Pick<ioBroker.Adapter, 'setTimeout' | 'clearTimeout'> {
+export interface DeviceHost extends Pick<ioBroker.Adapter, 'setTimeout' | 'clearTimeout' | 'extendObject'> {
 	namespace: string;
 	log: ioBroker.Logger;
 	setState(id: string, state: ioBroker.SettableState): Promise<unknown>;
@@ -312,6 +520,11 @@ export class AndroidDevice {
 	private infoRead = false;
 	/** Hide the debugging notification */
 	hideNotification = false;
+	/** Interval of the info values in ms, 0 = off */
+	readonly pollMs: number;
+	private pollTimer?: ioBroker.Timeout;
+	private lastStorage = 0;
+	private batteryCreated = false;
 	/** Apps installed on the device (read when connected) */
 	apps: string[] = [];
 	private notifyTimer?: ioBroker.Timeout;
@@ -333,6 +546,8 @@ export class AndroidDevice {
 		this.ip = cfg.ip;
 		this.name = cfg.name || cfg.ip;
 		this.fixedPort = parsePort(cfg.port);
+		const poll = cfg.pollInterval === undefined || cfg.pollInterval === null ? 60 : Number(cfg.pollInterval);
+		this.pollMs = Number.isFinite(poll) && poll > 0 ? Math.min(3600, Math.max(10, poll)) * 1000 : 0;
 		this.objectId = objectId ?? deviceObjectId(this.ip, this.fixedPort);
 	}
 
@@ -530,6 +745,12 @@ export class AndroidDevice {
 				this.adapter.log.info(`${this.label} connected`);
 			}
 		}
+		if (on && this.pollMs && !this.pollTimer) {
+			this.pollTimer = this.adapter.setTimeout(() => void this.poll(), 2000);
+		} else if (!on) {
+			this.adapter.clearTimeout(this.pollTimer);
+			this.pollTimer = undefined;
+		}
 		await this.adapter.setState(this.stateId('connection'), { val: on, ack: true });
 	}
 
@@ -680,6 +901,76 @@ export class AndroidDevice {
 		});
 	}
 
+	/** Reads the info values and schedules the next run while connected. */
+	private async poll(): Promise<void> {
+		if (!this.connected) {
+			this.pollTimer = undefined;
+			return;
+		}
+		try {
+			const withStorage = Date.now() - this.lastStorage > 3600_000;
+			const info = parseInfo(await this.readShell(infoCommand(withStorage)));
+			if (withStorage) {
+				this.lastStorage = Date.now();
+			}
+			await this.writeInfo(info);
+		} catch (e) {
+			this.adapter.log.debug(`${this.label}: reading info failed: ${errorText(e)}`);
+		}
+		this.pollTimer = this.connected ? this.adapter.setTimeout(() => void this.poll(), this.pollMs) : undefined;
+	}
+
+	/**
+	 * Writes the info values to the states.
+	 *
+	 * @param info parsed values
+	 */
+	private async writeInfo(info: DeviceInfo): Promise<void> {
+		const set = async (name: string, val: ioBroker.StateValue | undefined): Promise<void> => {
+			if (val !== undefined) {
+				await this.adapter.setState(this.infoId(name), { val, ack: true });
+			}
+		};
+		if (info.battery?.present) {
+			if (!this.batteryCreated) {
+				for (const [name, common] of Object.entries(BATTERY_STATES)) {
+					await this.adapter.extendObject(this.infoId(name), { type: 'state', common, native: {} });
+				}
+				this.batteryCreated = true;
+			}
+			await set('batteryLevel', info.battery.level);
+			await set('charging', info.battery.charging);
+			await set('chargeSource', info.battery.source);
+			await set('batteryTemperature', info.battery.temperature);
+		}
+		await set('screenOn', info.screenOn);
+		await set('currentApp', info.currentApp);
+		await set('wifiSsid', info.wifiSsid);
+		await set('wifiRssi', info.wifiRssi);
+		await set('doNotDisturb', info.doNotDisturb);
+		await set('storageFree', info.storageFreeGB);
+	}
+
+	/**
+	 * Switches "do not disturb" on the device.
+	 *
+	 * @param on true = on
+	 */
+	async setDoNotDisturb(on: boolean): Promise<void> {
+		await this.run(`cmd notification set_dnd ${on ? 'on' : 'off'}`);
+		const z = await this.run('settings get global zen_mode');
+		await this.adapter.setState(this.infoId('doNotDisturb'), { val: z.trim() !== '0', ack: true });
+	}
+
+	/**
+	 * Full id of an info state.
+	 *
+	 * @param name state name
+	 */
+	infoId(name: string): string {
+		return `${this.objectId}.info.${name}`;
+	}
+
 	/** Takes a screenshot and stores it as file. */
 	private async screencap(): Promise<void> {
 		const png = extractPng(await Adb.util.readAll(await this.device().screencap()));
@@ -711,6 +1002,8 @@ export class AndroidDevice {
 	/** Closes the connection */
 	async close(): Promise<void> {
 		this.adapter.clearTimeout(this.notifyTimer);
+		this.adapter.clearTimeout(this.pollTimer);
+		this.pollTimer = undefined;
 		if (this.serial) {
 			await this.client.disconnect(this.ip, portOfSerial(this.serial)).catch(() => undefined);
 		}
