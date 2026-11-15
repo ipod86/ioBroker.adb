@@ -81,6 +81,8 @@ Android schaltet kabelloses Debugging bei jedem Neustart aus und oft auch, wenn 
 
 **Beispiel für Tasker:**
 
+Fertige Beispiele zum Importieren (Neustart-Profil, WLAN-Profil, Knopf für den Startbildschirm): [docs/tasker](https://github.com/ipod86/ioBroker.adb/tree/master/docs/tasker) – oder selbst bauen:
+
 1. Reiter **Profile** → **+** → **Ereignis** → **System** → **Gerät gebootet** (Suche: „boot“).
 2. Zurück → **Neue Aufgabe** → Name z. B. „adb WLAN an“.
 3. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert `1`. Mit ▶ testen.
@@ -95,7 +97,10 @@ Etwa 30–60 Sekunden nach dem Hochfahren ist der Adapter wieder verbunden – m
 2. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert leer lassen, **Einstellung lesen nach** `%adb`.
 3. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert `1`, mit der Bedingung **Wenn** `%adb` **!~** `1`.
 4. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert `0`, mit der Bedingung **Wenn** `%adb` **~** `1`.
-5. Lange auf den Startbildschirm tippen → **Widgets** → **Tasker** → **Aufgabe** (bzw. **Aufgaben-Verknüpfung**) → die Aufgabe wählen. Jeder Tipp schaltet kabelloses Debugging nun ein oder aus.
+5. Optional – der Knopf zeigt den Zustand mit seiner Farbe: **+** → **App** → **Wähle Widget Icon** (Set Widget Icon), Name = Name der Aufgabe, Icon → *Material-Symbol* → *Farbe wählen* grün (`#3DDC84`) → `android`, mit der Bedingung **Wenn** `%adb` **!~** `1`. Dieselbe Aktion noch einmal mit weißem Symbol und der Bedingung **Wenn** `%adb` **~** `1`.
+6. Knopf auf den Startbildschirm legen: lange auf eine freie Stelle tippen → **Widgets** → **Tasker** → **Task** (1×1) an die Stelle ziehen → die Aufgabe wählen → ein Symbol wählen (Tasker verlangt eins) → mit dem Zurück-Pfeil bestätigen. Jeder Tipp schaltet kabelloses Debugging nun ein oder aus: **grün = an, weiß = aus**.
+
+Der Knopf ändert seine Farbe nur, wenn er angetippt wird. Schaltet deine Regel für Neustart oder WLAN kabelloses Debugging ein, dort ebenfalls die grüne Aktion **Wähle Widget Icon** ergänzen – dann ist der Knopf auch nach einem Neustart grün.
 
 Ausgeschaltet zeigt der Adapter das Gerät als getrennt; wieder eingeschaltet verbindet er sich innerhalb des Prüf-Intervalls von selbst. Die Kopplung bleibt erhalten.
 

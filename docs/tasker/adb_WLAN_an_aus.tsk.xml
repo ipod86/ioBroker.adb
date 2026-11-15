@@ -1,0 +1,80 @@
+<TaskerData sr="" dvi="1" tv="6.7.9">
+	<Task sr="task66">
+		<cdate>1794759822952</cdate>
+		<edate>1794779566309</edate>
+		<id>66</id>
+		<nme>Adb_WLAN_an_aus</nme>
+		<pri>7</pri>
+		<Action sr="act0" ve="7">
+			<code>235</code>
+			<Int sr="arg0" val="0"/>
+			<Str sr="arg1" ve="3">adb_wifi_enabled</Str>
+			<Str sr="arg2" ve="3"/>
+			<Int sr="arg3" val="0"/>
+			<Str sr="arg4" ve="3">%adb</Str>
+		</Action>
+		<Action sr="act1" ve="7">
+			<code>235</code>
+			<Int sr="arg0" val="0"/>
+			<Str sr="arg1" ve="3">adb_wifi_enabled</Str>
+			<Str sr="arg2" ve="3">1</Str>
+			<Int sr="arg3" val="0"/>
+			<Str sr="arg4" ve="3"/>
+			<ConditionList sr="if">
+				<Condition sr="c0" ve="3">
+					<lhs>%adb</lhs>
+					<op>1</op>
+					<rhs>1</rhs>
+				</Condition>
+			</ConditionList>
+		</Action>
+		<Action sr="act2" ve="7">
+			<code>235</code>
+			<Int sr="arg0" val="0"/>
+			<Str sr="arg1" ve="3">adb_wifi_enabled</Str>
+			<Str sr="arg2" ve="3">0</Str>
+			<Int sr="arg3" val="0"/>
+			<Str sr="arg4" ve="3"/>
+			<ConditionList sr="if">
+				<Condition sr="c0" ve="3">
+					<lhs>%adb</lhs>
+					<op>2</op>
+					<rhs>1</rhs>
+				</Condition>
+			</ConditionList>
+		</Action>
+		<Action sr="act3" ve="7">
+			<code>152</code>
+			<Str sr="arg0" ve="3">Adb_WLAN_an_aus</Str>
+			<Img sr="arg1" ve="2">
+				<nme>mw_action_android</nme>
+				<tint>-12723068</tint>
+			</Img>
+			<ConditionList sr="if">
+				<Condition sr="c0" ve="3">
+					<lhs>%adb</lhs>
+					<op>1</op>
+					<rhs>1</rhs>
+				</Condition>
+			</ConditionList>
+		</Action>
+		<Action sr="act4" ve="7">
+			<code>152</code>
+			<Str sr="arg0" ve="3">Adb_WLAN_an_aus</Str>
+			<Img sr="arg1" ve="2">
+				<nme>mw_action_android</nme>
+				<tint>-1</tint>
+			</Img>
+			<ConditionList sr="if">
+				<Condition sr="c0" ve="3">
+					<lhs>%adb</lhs>
+					<op>2</op>
+					<rhs>1</rhs>
+				</Condition>
+			</ConditionList>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>mw_action_android</nme>
+		</Img>
+	</Task>
+</TaskerData>

@@ -90,6 +90,8 @@ Android switches wireless debugging off at every reboot and often when the phone
 
 **Example for Tasker:**
 
+Ready-made examples to import (boot profile, Wi-Fi profile, home screen button): [docs/tasker](https://github.com/ipod86/ioBroker.adb/tree/master/docs/tasker) – or build them yourself:
+
 1. Tab **Profiles** → **+** → **Event** → **System** → **Device Boot** (search for "boot").
 2. Back → **New Task** → name it e.g. "adb Wi-Fi on".
 3. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, Value `1`. Test it with ▶.
@@ -104,7 +106,10 @@ About 30–60 seconds after the phone has started, the adapter is connected agai
 2. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, leave Value empty, **Read Setting To** `%adb`.
 3. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, Value `1`, with the condition **If** `%adb` **!~** `1`.
 4. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, Value `0`, with the condition **If** `%adb` **~** `1`.
-5. Long press on the home screen → **Widgets** → **Tasker** → **Task** (or **Task Shortcut**) → choose the task. Each tap now switches wireless debugging on or off.
+5. Optional – the button shows the state by its colour: **+** → **App** → **Set Widget Icon**, Name = the task name, Icon → *Material icon* → *Choose colour* green (`#3DDC84`) → `android`, with the condition **If** `%adb` **!~** `1`. Add the same action once more with a white icon and the condition **If** `%adb` **~** `1`.
+6. Put the button on the home screen: long press on an empty spot → **Widgets** → **Tasker** → **Task** (1×1) → drag it to the spot → choose the task → choose an icon (Tasker asks for one) → back arrow to confirm. Each tap now switches wireless debugging on or off: **green = on, white = off**.
+
+The button only changes its colour when it is tapped. If your boot or Wi-Fi rule switches wireless debugging on, add the green **Set Widget Icon** action there too, so the button turns green after a reboot as well.
 
 Switched off, the adapter shows the device as disconnected; switched on again, it connects by itself within the check interval. Pairing is kept.
 
