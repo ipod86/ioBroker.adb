@@ -89,6 +89,18 @@ Android schaltet kabelloses Debugging bei jedem Neustart aus und oft auch, wenn 
 
 Etwa 30–60 Sekunden nach dem Hochfahren ist der Adapter wieder verbunden – mit dem neuen Port.
 
+**Kabelloses Debugging per Knopf auf dem Startbildschirm ein- und ausschalten (Tasker):**
+
+1. **Aufgaben** → **+** → Name z. B. „adb WLAN an/aus“.
+2. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert leer lassen, **Einstellung lesen nach** `%adb`.
+3. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert `1`, mit der Bedingung **Wenn** `%adb` **!~** `1`.
+4. **+** → **Einstellungen** → **Benutzerdefinierte Einstellung**: Typ **Global**, Name `adb_wifi_enabled`, Wert `0`, mit der Bedingung **Wenn** `%adb` **~** `1`.
+5. Lange auf den Startbildschirm tippen → **Widgets** → **Tasker** → **Aufgabe** (bzw. **Aufgaben-Verknüpfung**) → die Aufgabe wählen. Jeder Tipp schaltet kabelloses Debugging nun ein oder aus.
+
+Ausgeschaltet zeigt der Adapter das Gerät als getrennt; wieder eingeschaltet verbindet er sich innerhalb des Prüf-Intervalls von selbst. Die Kopplung bleibt erhalten.
+
+Ohne Tasker: **Entwickleroptionen → Kacheln für Schnelleinstellungen (Entwickler) → Kabelloses Debugging** legt eine Kachel in die Schnelleinstellungen.
+
 Hinweis: Kabelloses Debugging ist dann in deinem Heimnetz ständig an. Verbinden können sich nur gekoppelte Geräte; ein neues Gerät müsste erst koppeln, und dafür braucht es den Code oder QR-Code, den nur das Handy anzeigt.
 
 ### Geräte-Infos

@@ -98,6 +98,18 @@ Android switches wireless debugging off at every reboot and often when the phone
 
 About 30–60 seconds after the phone has started, the adapter is connected again – with the new port.
 
+**Switch wireless debugging on and off with a button on the home screen (Tasker):**
+
+1. **Tasks** → **+** → name it e.g. "adb Wi-Fi on/off".
+2. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, leave Value empty, **Read Setting To** `%adb`.
+3. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, Value `1`, with the condition **If** `%adb` **!~** `1`.
+4. **+** → **Settings** → **Custom Setting**: Type **Global**, Name `adb_wifi_enabled`, Value `0`, with the condition **If** `%adb` **~** `1`.
+5. Long press on the home screen → **Widgets** → **Tasker** → **Task** (or **Task Shortcut**) → choose the task. Each tap now switches wireless debugging on or off.
+
+Switched off, the adapter shows the device as disconnected; switched on again, it connects by itself within the check interval. Pairing is kept.
+
+Without Tasker: **Developer options → Quick settings developer tiles → Wireless debugging** adds a tile to the quick settings panel.
+
 Note: wireless debugging is then always on in your home network. Only devices that have been paired can connect; a new device would have to pair first, which needs the code or QR code shown on the phone.
 
 ### Device info
