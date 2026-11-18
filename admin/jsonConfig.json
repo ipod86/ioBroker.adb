@@ -62,10 +62,9 @@
 						{
 							"type": "checkbox",
 							"attr": "portChanges",
-							"title": "Port changes",
-							"tooltip": "The port is the one of wireless debugging and changes (e.g. Docker without mDNS): the adapter searches the new port itself, the folder of the states has no port",
+							"title": "Search port",
+							"tooltip": "Wireless debugging where mDNS does not arrive (e.g. Docker): the adapter searches the port itself, a port entered is only tried first. The folder of the states has no port",
 							"default": false,
-							"disabled": "!data.port",
 							"width": "8%"
 						},
 						{

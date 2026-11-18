@@ -58,6 +58,6 @@
 	"adb server port": "adb-serverpoort",
 	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "adb versie %s is te oud voor draadloos debuggen (koppelen vereist versie 30 of nieuwer). Debian 12 / Raspberry Pi OS boekenworm: installeer de nieuwere versie van bookworm-backports, zie de adapterdocumentatie.",
 	"adb version %s – pairing supported": "adb versie %s – koppeling ondersteund",
-	"Port changes": "Poort wisselt",
-	"The port is the one of wireless debugging and changes (e.g. Docker without mDNS): the adapter searches the new port itself, the folder of the states has no port": "De poort is die van draadloos debuggen en wisselt (bijv. Docker zonder mDNS): de adapter zoekt de nieuwe poort zelf, de map van de states heeft geen poort"
+	"Search port": "Poort zoeken",
+	"Wireless debugging where mDNS does not arrive (e.g. Docker): the adapter searches the port itself, a port entered is only tried first. The folder of the states has no port": "Draadloos debuggen waar mDNS niet aankomt (bijv. Docker): de adapter zoekt de poort zelf, een ingevoerde poort wordt alleen eerst geprobeerd. De map van de states heeft geen poort"
 }

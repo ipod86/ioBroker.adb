@@ -279,6 +279,27 @@ export const WIRELESS_STATES: Record<string, ioBroker.StateCommon> = {
 		def: false,
 		desc: 'true: the notification "Wireless debugging connected" is snoozed and snoozed again after every connection; false: shown again',
 	},
+	searchPort: {
+		name: {
+			en: 'Search the port now',
+			de: 'Port jetzt suchen',
+			ru: 'Искать порт сейчас',
+			pt: 'Procurar a porta agora',
+			nl: 'Poort nu zoeken',
+			fr: 'Chercher le port maintenant',
+			it: 'Cerca la porta ora',
+			es: 'Buscar el puerto ahora',
+			pl: 'Szukaj portu teraz',
+			uk: 'Шукати порт зараз',
+			'zh-cn': '立即查找端口',
+		},
+		type: 'boolean',
+		role: 'button',
+		read: false,
+		write: true,
+		def: false,
+		desc: 'Searches the port of wireless debugging on this device now (without mDNS, e.g. in Docker) and connects',
+	},
 };
 
 /** Snooze time of the debugging notification: one year, renewed after every connection */
@@ -504,8 +525,11 @@ const SHELL_MS = 120000;
 
 /** Connection timeout for a single connect attempt */
 const WAIT_MS = 10000;
-/** A port search runs at most this often per device */
-const SCAN_EVERY_MS = 5 * 60 * 1000;
+/**
+ * A device that answers but has no adb port (wireless debugging switched off) is searched again after this time; a
+ * device that does not answer at all (asleep) at every check of the connections, the search gives up at once then
+ */
+const SCAN_AGAIN_MS = 2 * 60 * 1000;
 /** Time for one port found by the search */
 const SCAN_WAIT_MS = 5000;
 
@@ -520,7 +544,10 @@ export class AndroidDevice {
 	readonly searchPort: boolean;
 	/** port that worked last (or the one entered for a changing port) */
 	private lastPort?: number;
-	private lastScan = 0;
+	/** earliest time of the next search */
+	private nextScan = 0;
+	/** search at the next attempt, also without the option (button searchPort) */
+	private scanNow = false;
 	readonly objectId: string;
 	/** adb serial of the current connection, e.g. `192.168.1.5:41235` */
 	serial?: string;
@@ -584,6 +611,18 @@ export class AndroidDevice {
 		return this.fixedPort ? portOfSerial(serial) === this.fixedPort : true;
 	}
 
+	/** Button searchPort: search the port of wireless debugging now and connect */
+	async searchPortNow(): Promise<boolean> {
+		if (this.fixedPort) {
+			return false;
+		}
+		if (this.connected && this.serial) {
+			return true;
+		}
+		this.scanNow = true;
+		return this.ensureConnected(false);
+	}
+
 	/**
 	 * Connects if not connected yet. Calls at the same time share one attempt.
 	 *
@@ -618,11 +657,16 @@ export class AndroidDevice {
 			}
 			error = result;
 		}
-		if (this.searchPort && Date.now() - this.lastScan >= SCAN_EVERY_MS) {
-			this.lastScan = Date.now();
+		if (this.scanNow || (this.searchPort && Date.now() >= this.nextScan)) {
+			this.scanNow = false;
 			await this.setStatus('Searching the port of wireless debugging …', true);
-			const ports = (await findOpenPorts(this.ip)).filter(p => !candidates.includes(p));
-			this.adapter.log.debug(`${this.label}: open ports ${ports.join(', ') || 'none'}`);
+			const found = await findOpenPorts(this.ip);
+			// asleep: try again at the next check; awake without adb: debugging is off, not too often
+			this.nextScan = found.reachable ? Date.now() + SCAN_AGAIN_MS : 0;
+			const ports = found.ports.filter(p => !candidates.includes(p));
+			this.adapter.log.debug(
+				`${this.label}: ${found.reachable ? `open ports ${ports.join(', ') || 'none'}` : 'does not answer'}`,
+			);
 			for (const port of ports) {
 				// other services can have open ports too: do not wait long on one that is not adb
 				const result = await this.tryPort(port, true, false, SCAN_WAIT_MS);
@@ -638,7 +682,7 @@ export class AndroidDevice {
 		await this.setStatus(
 			error ||
 				(this.searchPort
-					? 'Wireless debugging not found (switched off or device asleep?) - the port is searched again in a few minutes'
+					? 'Wireless debugging not found (switched off or device asleep?) - the port is searched again'
 					: 'Wireless debugging not found in the network (switched off or device asleep?)'),
 			quiet,
 		);

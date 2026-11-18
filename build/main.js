@@ -372,6 +372,11 @@ class AdbAdapter extends utils.Adapter {
     }
     const objectId = parts.pop();
     const dev = this.devices.find((d) => d.objectId === objectId);
+    if (dev && !dev.fixedPort && name === "searchPort") {
+      await this.setState(id, false, true);
+      void dev.searchPortNow();
+      return;
+    }
     if (dev && !dev.fixedPort && name === "hideNotification") {
       await dev.setHideNotification(state.val === true || state.val === "true" || state.val === 1);
       await this.setState(id, dev.hideNotification, true);

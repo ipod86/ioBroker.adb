@@ -49,6 +49,14 @@ export interface ScanOptions {
 	probe?: (host: string, port: number, timeoutMs: number) => Promise<ProbeResult>;
 }
 
+/** Result of a search */
+export interface ScanResult {
+	/** open ports, ascending */
+	ports: number[];
+	/** false: the host did not answer at all (asleep, Wi-Fi off) */
+	reachable: boolean;
+}
+
 /**
  * Open TCP ports of a host in a range - to find the port of wireless debugging where mDNS does not reach (Docker).
  * Android refuses closed ports at once, so the whole range takes a few seconds; a host that does not answer at
@@ -56,9 +64,9 @@ export interface ScanOptions {
  *
  * @param host host
  * @param options range, concurrency and timeouts
- * @returns the open ports, ascending; empty if none or the host does not answer
+ * @returns the open ports and whether the host answered at all
  */
-export async function findOpenPorts(host: string, options: ScanOptions = {}): Promise<number[]> {
+export async function findOpenPorts(host: string, options: ScanOptions = {}): Promise<ScanResult> {
 	const [from, to] = options.range ?? WIRELESS_PORT_RANGE;
 	const concurrency = options.concurrency ?? 256;
 	const timeoutMs = options.timeoutMs ?? 500;
@@ -86,5 +94,5 @@ export async function findOpenPorts(host: string, options: ScanOptions = {}): Pr
 		}
 	};
 	await Promise.all(Array.from({ length: Math.min(concurrency, to - from + 1) }, () => worker()));
-	return open.sort((a, b) => a - b);
+	return { ports: open.sort((a, b) => a - b), reachable: answered > 0 };
 }

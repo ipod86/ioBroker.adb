@@ -13,8 +13,14 @@ const device =
 
 describe('portScan', () => {
 	it('finds the open ports of the range, ascending', async () => {
-		const ports = await findOpenPorts('x', { range: [37000, 38000], probe: device([37175, 37020]) });
+		const { ports, reachable } = await findOpenPorts('x', { range: [37000, 38000], probe: device([37175, 37020]) });
 		expect(ports).to.deep.equal([37020, 37175]);
+		expect(reachable).to.equal(true);
+	});
+
+	it('an awake device without adb: reachable, no port', async () => {
+		const result = await findOpenPorts('x', { range: [33000, 33100], probe: device([]) });
+		expect(result).to.deep.equal({ ports: [], reachable: true });
 	});
 
 	it('looks at every port of the range once', async () => {
@@ -32,7 +38,7 @@ describe('portScan', () => {
 
 	it('gives up early when the host does not answer at all (asleep, Wi-Fi off)', async () => {
 		let probed = 0;
-		const ports = await findOpenPorts('x', {
+		const { ports, reachable } = await findOpenPorts('x', {
 			range: [32768, 60999],
 			concurrency: 10,
 			giveUpAfter: 50,
@@ -42,11 +48,12 @@ describe('portScan', () => {
 			},
 		});
 		expect(ports).to.deep.equal([]);
+		expect(reachable).to.equal(false);
 		expect(probed).to.be.below(100);
 	});
 
 	it('keeps searching when some ports do not answer but others refuse', async () => {
-		const ports = await findOpenPorts('x', {
+		const { ports } = await findOpenPorts('x', {
 			range: [45000, 45999],
 			giveUpAfter: 50,
 			probe: (_h, port) => Promise.resolve(port === 45900 ? 'open' : port % 2 ? 'timeout' : 'closed'),

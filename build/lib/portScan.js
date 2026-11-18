@@ -72,7 +72,7 @@ async function findOpenPorts(host, options = {}) {
     }
   };
   await Promise.all(Array.from({ length: Math.min(concurrency, to - from + 1) }, () => worker()));
-  return open.sort((a, b) => a - b);
+  return { ports: open.sort((a, b) => a - b), reachable: answered > 0 };
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

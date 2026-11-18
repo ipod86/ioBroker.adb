@@ -287,6 +287,27 @@ const WIRELESS_STATES = {
     write: true,
     def: false,
     desc: 'true: the notification "Wireless debugging connected" is snoozed and snoozed again after every connection; false: shown again'
+  },
+  searchPort: {
+    name: {
+      en: "Search the port now",
+      de: "Port jetzt suchen",
+      ru: "\u0418\u0441\u043A\u0430\u0442\u044C \u043F\u043E\u0440\u0442 \u0441\u0435\u0439\u0447\u0430\u0441",
+      pt: "Procurar a porta agora",
+      nl: "Poort nu zoeken",
+      fr: "Chercher le port maintenant",
+      it: "Cerca la porta ora",
+      es: "Buscar el puerto ahora",
+      pl: "Szukaj portu teraz",
+      uk: "\u0428\u0443\u043A\u0430\u0442\u0438 \u043F\u043E\u0440\u0442 \u0437\u0430\u0440\u0430\u0437",
+      "zh-cn": "\u7ACB\u5373\u67E5\u627E\u7AEF\u53E3"
+    },
+    type: "boolean",
+    role: "button",
+    read: false,
+    write: true,
+    def: false,
+    desc: "Searches the port of wireless debugging on this device now (without mDNS, e.g. in Docker) and connects"
   }
 };
 const SNOOZE_MS = 365 * 24 * 3600 * 1e3;
@@ -494,7 +515,7 @@ const BATTERY_STATES = {
 };
 const SHELL_MS = 12e4;
 const WAIT_MS = 1e4;
-const SCAN_EVERY_MS = 5 * 60 * 1e3;
+const SCAN_AGAIN_MS = 2 * 60 * 1e3;
 const SCAN_WAIT_MS = 5e3;
 class AndroidDevice {
   /**
@@ -524,7 +545,10 @@ class AndroidDevice {
   searchPort;
   /** port that worked last (or the one entered for a changing port) */
   lastPort;
-  lastScan = 0;
+  /** earliest time of the next search */
+  nextScan = 0;
+  /** search at the next attempt, also without the option (button searchPort) */
+  scanNow = false;
   objectId;
   /** adb serial of the current connection, e.g. `192.168.1.5:41235` */
   serial;
@@ -560,6 +584,17 @@ class AndroidDevice {
     }
     return this.fixedPort ? (0, import_util.portOfSerial)(serial) === this.fixedPort : true;
   }
+  /** Button searchPort: search the port of wireless debugging now and connect */
+  async searchPortNow() {
+    if (this.fixedPort) {
+      return false;
+    }
+    if (this.connected && this.serial) {
+      return true;
+    }
+    this.scanNow = true;
+    return this.ensureConnected(false);
+  }
   /**
    * Connects if not connected yet. Calls at the same time share one attempt.
    *
@@ -594,11 +629,15 @@ class AndroidDevice {
       }
       error = result;
     }
-    if (this.searchPort && Date.now() - this.lastScan >= SCAN_EVERY_MS) {
-      this.lastScan = Date.now();
+    if (this.scanNow || this.searchPort && Date.now() >= this.nextScan) {
+      this.scanNow = false;
       await this.setStatus("Searching the port of wireless debugging \u2026", true);
-      const ports = (await (0, import_portScan.findOpenPorts)(this.ip)).filter((p) => !candidates.includes(p));
-      this.adapter.log.debug(`${this.label}: open ports ${ports.join(", ") || "none"}`);
+      const found = await (0, import_portScan.findOpenPorts)(this.ip);
+      this.nextScan = found.reachable ? Date.now() + SCAN_AGAIN_MS : 0;
+      const ports = found.ports.filter((p) => !candidates.includes(p));
+      this.adapter.log.debug(
+        `${this.label}: ${found.reachable ? `open ports ${ports.join(", ") || "none"}` : "does not answer"}`
+      );
       for (const port of ports) {
         const result = await this.tryPort(port, true, false, SCAN_WAIT_MS);
         if (result === true) {
@@ -611,7 +650,7 @@ class AndroidDevice {
       this.discovery.refresh();
     }
     await this.setStatus(
-      error || (this.searchPort ? "Wireless debugging not found (switched off or device asleep?) - the port is searched again in a few minutes" : "Wireless debugging not found in the network (switched off or device asleep?)"),
+      error || (this.searchPort ? "Wireless debugging not found (switched off or device asleep?) - the port is searched again" : "Wireless debugging not found in the network (switched off or device asleep?)"),
       quiet
     );
     await this.setConnected(false);
