@@ -5,6 +5,7 @@ import {
 	parseInfo,
 	checkDevices,
 	cleanShellCommand,
+	deviceIdOf,
 	deviceObjectId,
 	extractPng,
 	isPackageName,
@@ -118,6 +119,23 @@ describe('util', () => {
 		]);
 		expect(ok.map(d => d.ip)).to.deep.equal(['192.168.99.76', '192.168.99.80']);
 		expect(problems).to.have.length(2);
+	});
+
+	it('deviceIdOf leaves a changing port out of the folder (Docker without mDNS)', () => {
+		expect(deviceIdOf({ ip: '192.168.99.76', port: '5555' })).to.equal('192_168_99_76_5555');
+		expect(deviceIdOf({ ip: '192.168.99.76', port: '5555', portChanges: true })).to.equal('192_168_99_76');
+		expect(deviceIdOf({ ip: '192.168.99.76', port: '32769', portChanges: true })).to.equal('192_168_99_76');
+		expect(deviceIdOf({ ip: '192.168.99.80', port: '' })).to.equal('192_168_99_80');
+	});
+
+	it('checkDevices: two entries in the same folder', () => {
+		const { ok, problems } = checkDevices([
+			{ enabled: true, name: 'Docker', ip: '192.168.99.76', port: '32769', portChanges: true },
+			{ enabled: true, name: 'Wireless', ip: '192.168.99.76', port: '' },
+			{ enabled: true, name: 'Other port', ip: '192.168.99.76', port: '5555' },
+		]);
+		expect(ok.map(d => d.name)).to.deep.equal(['Docker', 'Other port']);
+		expect(problems[0]).to.match(/same folder 192_168_99_76/);
 	});
 });
 

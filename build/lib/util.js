@@ -23,6 +23,7 @@ __export(util_exports, {
   INFO_SEPARATOR: () => INFO_SEPARATOR,
   checkDevices: () => checkDevices,
   cleanShellCommand: () => cleanShellCommand,
+  deviceIdOf: () => deviceIdOf,
   deviceObjectId: () => deviceObjectId,
   extractPng: () => extractPng,
   hostOfSerial: () => hostOfSerial,
@@ -49,6 +50,10 @@ function parsePort(port) {
 function deviceObjectId(ip, port) {
   const base = port ? `${ip.trim().toLowerCase()}:${port}` : ip.trim().toLowerCase();
   return base.replace(/[.:]/g, "_").replace(/[^A-Za-z0-9_-]/g, "_");
+}
+function deviceIdOf(cfg) {
+  var _a;
+  return deviceObjectId(String((_a = cfg.ip) != null ? _a : ""), cfg.portChanges ? void 0 : parsePort(cfg.port));
 }
 function hostOfSerial(serial) {
   const m = /^(.+):(\d+)$/.exec(serial);
@@ -104,9 +109,11 @@ function checkDevices(devices) {
       continue;
     }
     const port = parsePort(d.port);
-    const id = deviceObjectId(ip, port);
+    const id = deviceIdOf({ ip, port: port != null ? port : "", portChanges: d.portChanges === true });
     if (seen.has(id)) {
-      problems.push(`Device ${ip}${port ? `:${port}` : ""} is listed twice, the second entry is skipped`);
+      problems.push(
+        `Device ${ip}${port ? `:${port}` : ""} uses the same folder ${id} as another device, the second entry is skipped`
+      );
       continue;
     }
     seen.add(id);
@@ -202,6 +209,7 @@ function parseInfo(output) {
   INFO_SEPARATOR,
   checkDevices,
   cleanShellCommand,
+  deviceIdOf,
   deviceObjectId,
   extractPng,
   hostOfSerial,

@@ -135,7 +135,9 @@ Beim ersten Verbinden fragt das Gerät, ob **USB-Debugging** für diesen Rechner
 
 ## Datenpunkte
 
-Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei festem Port, `adb.0.<ip>` bei automatischem Port (Punkte durch `_` ersetzt). Mit Version 0.0.x eingerichtete Geräte behalten ihre alte ID `adb.0.<ip>:<port>`.
+Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei festem Port, `adb.0.<ip>` bei automatischem Port oder mit „Port wechselt“ (Punkte durch `_` ersetzt). Mit Version 0.0.x eingerichtete Geräte behalten ihre alte ID `adb.0.<ip>:<port>`.
+
+**Docker ohne mDNS (Port des kabellosen Debuggings von Hand eingetragen):** In einem Container kommt mDNS oft nicht an, dann findet der Adapter den Port des kabellosen Debuggings nicht – und der wechselt nach jedem Neustart. Den aktuellen Port einmal eintragen und **„Port wechselt“** anhaken: Das Gerät wird dann als Gerät mit kabellosem Debugging behandelt (mit allen Funktionen dafür), die Datenpunkte liegen in `adb.0.<ip>` ohne Port, und wenn sich der Port geändert hat, sucht der Adapter den neuen selbst (er probiert die offenen Ports dieses Geräts zwischen 32768 und 60999, höchstens alle 5 Minuten; ein schlafendes Gerät gibt er nach wenigen Sekunden auf). Den alten Ordner mit Port kann man löschen (das Log nennt ihn). Alternativ den Container mit `network_mode: host` starten, dann funktioniert mDNS und der Port kann leer bleiben.
 
 | Datenpunkt | Bedeutung |
 |---|---|

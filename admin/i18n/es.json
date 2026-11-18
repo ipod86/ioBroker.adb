@@ -57,5 +57,7 @@
 	"adb server address": "dirección del servidor adb",
 	"adb server port": "puerto del servidor adb",
 	"adb version %s is too old for wireless debugging (pairing needs version 30 or newer). Debian 12 / Raspberry Pi OS bookworm: install the newer version from bookworm-backports, see the adapter documentation.": "La versión de adb %s es demasiado antigua para la depuración inalámbrica (el emparejamiento necesita la versión 30 o posterior). Bookworm Debian 12 / Raspberry Pi OS: instale la versión más reciente desde bookworm-backports, consulte la documentación del adaptador.",
-	"adb version %s – pairing supported": "versión de adb %s – emparejamiento compatible"
+	"adb version %s – pairing supported": "versión de adb %s – emparejamiento compatible",
+	"Port changes": "El puerto cambia",
+	"The port is the one of wireless debugging and changes (e.g. Docker without mDNS): the adapter searches the new port itself, the folder of the states has no port": "El puerto es el de la depuración inalámbrica y cambia (p. ej. Docker sin mDNS): el adaptador busca el nuevo puerto por sí mismo, la carpeta de los estados no lleva puerto"
 }

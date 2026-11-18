@@ -127,8 +127,19 @@ class AdbAdapter extends utils.Adapter {
    * @param cfg device configuration
    */
   async legacyId(cfg) {
+    var _a;
     const port = (0, import_util.parsePort)(cfg.port);
     if (!port) {
+      return void 0;
+    }
+    if (cfg.portChanges) {
+      for (const old of [(0, import_util.legacyObjectId)(cfg.ip, port), (0, import_util.deviceObjectId)(cfg.ip, port)]) {
+        if (((_a = await this.getObjectAsync(old)) == null ? void 0 : _a.type) === "device") {
+          this.log.info(
+            `${cfg.ip}: the states are now in ${(0, import_util.deviceIdOf)(cfg)} (without port) - the old folder ${old} can be deleted`
+          );
+        }
+      }
       return void 0;
     }
     const id = (0, import_util.legacyObjectId)(cfg.ip, port);

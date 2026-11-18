@@ -37,14 +37,14 @@
 							"type": "text",
 							"attr": "name",
 							"title": "Name",
-							"width": "14%",
+							"width": "12%",
 							"default": ""
 						},
 						{
 							"type": "text",
 							"attr": "ip",
 							"title": "IP address",
-							"width": "14%",
+							"width": "13%",
 							"default": "",
 							"validator": "data.ip && data.ip.trim() !== ''",
 							"validatorNoSaveOnError": true,
@@ -54,10 +54,19 @@
 							"type": "text",
 							"attr": "port",
 							"title": "Port (empty = automatic)",
-							"width": "10%",
+							"width": "9%",
 							"default": "",
 							"validator": "!data.port || /^\\d{1,5}$/.test(String(data.port).trim())",
 							"validatorErrorText": "Only digits, or leave empty"
+						},
+						{
+							"type": "checkbox",
+							"attr": "portChanges",
+							"title": "Port changes",
+							"tooltip": "The port is the one of wireless debugging and changes (e.g. Docker without mDNS): the adapter searches the new port itself, the folder of the states has no port",
+							"default": false,
+							"disabled": "!data.port",
+							"width": "8%"
 						},
 						{
 							"type": "number",
@@ -66,21 +75,21 @@
 							"default": 60,
 							"min": 0,
 							"max": 3600,
-							"width": "10%"
+							"width": "9%"
 						},
 						{
 							"type": "checkbox",
 							"attr": "hideNotification",
 							"title": "Hide debug notice",
 							"default": false,
-							"disabled": "!!data.port",
-							"width": "10%"
+							"disabled": "(!!data.port && !data.portChanges)",
+							"width": "9%"
 						},
 						{
 							"type": "selectSendTo",
 							"attr": "automationApp",
 							"title": "Switch-on app",
-							"width": "18%",
+							"width": "17%",
 							"command": "listApps",
 							"jsonData": "{\"ip\": \"${data.ip}\"}",
 							"manual": true,
@@ -88,20 +97,20 @@
 							"alsoDependsOn": [
 								"ip"
 							],
-							"disabled": "!!data.port"
+							"disabled": "(!!data.port && !data.portChanges)"
 						},
 						{
 							"type": "sendTo",
 							"attr": "_grant",
 							"title": "Switch on after reboot",
-							"width": "18%",
+							"width": "17%",
 							"label": "Grant permission",
 							"command": "grantAutomation",
 							"jsonData": "{\"ip\": \"${data.ip}\", \"app\": \"${data.automationApp || ''}\"}",
 							"variant": "outlined",
 							"showProcess": true,
 							"timeout": 30000,
-							"disabled": "!!data.port || !data.ip"
+							"disabled": "(!!data.port && !data.portChanges) || !data.ip"
 						}
 					]
 				},

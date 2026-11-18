@@ -27,6 +27,7 @@ __export(device_exports, {
 });
 module.exports = __toCommonJS(device_exports);
 var import_adbkit = require("@devicefarmer/adbkit");
+var import_portScan = require("./portScan");
 var import_util = require("./util");
 const DEVICE_STATES = {
   connection: {
@@ -493,6 +494,8 @@ const BATTERY_STATES = {
 };
 const SHELL_MS = 12e4;
 const WAIT_MS = 1e4;
+const SCAN_EVERY_MS = 5 * 60 * 1e3;
+const SCAN_WAIT_MS = 5e3;
 class AndroidDevice {
   /**
    * @param adapter adapter
@@ -507,14 +510,21 @@ class AndroidDevice {
     this.discovery = discovery;
     this.ip = cfg.ip;
     this.name = cfg.name || cfg.ip;
-    this.fixedPort = (0, import_util.parsePort)(cfg.port);
+    this.searchPort = cfg.portChanges === true;
+    this.fixedPort = this.searchPort ? void 0 : (0, import_util.parsePort)(cfg.port);
+    this.lastPort = this.searchPort ? (0, import_util.parsePort)(cfg.port) : void 0;
     const poll = cfg.pollInterval === void 0 || cfg.pollInterval === null ? 60 : Number(cfg.pollInterval);
     this.pollMs = Number.isFinite(poll) && poll > 0 ? Math.min(3600, Math.max(10, poll)) * 1e3 : 0;
-    this.objectId = objectId != null ? objectId : (0, import_util.deviceObjectId)(this.ip, this.fixedPort);
+    this.objectId = objectId != null ? objectId : (0, import_util.deviceIdOf)(cfg);
   }
   ip;
   name;
   fixedPort;
+  /** wireless debugging with a port entered by hand: the port changes, it is searched when mDNS does not help */
+  searchPort;
+  /** port that worked last (or the one entered for a changing port) */
+  lastPort;
+  lastScan = 0;
   objectId;
   /** adb serial of the current connection, e.g. `192.168.1.5:41235` */
   serial;
@@ -564,44 +574,93 @@ class AndroidDevice {
     return this.busy;
   }
   /**
-   * Connects to the device, looking up the port if needed.
+   * Connects to the device, looking up the port if needed: the fixed port; else the port mDNS announces and the
+   * one that worked last; for a changing port entered by hand (Docker without mDNS) a search of the ports.
    *
    * @param quiet log only at debug level
    */
   async connect(quiet) {
-    let port = this.fixedPort;
-    if (!port) {
-      port = this.discovery.connectPort(this.ip);
-      if (!port) {
-        this.discovery.refresh();
-        await this.setStatus(
-          "Wireless debugging not found in the network (switched off or device asleep?)",
-          quiet
-        );
-        return false;
+    if (this.fixedPort) {
+      return this.tryPort(this.fixedPort, quiet, true);
+    }
+    const candidates = [.../* @__PURE__ */ new Set([this.discovery.connectPort(this.ip), this.lastPort])].filter(
+      (p) => !!p
+    );
+    let error = "";
+    for (const port of candidates) {
+      const result = await this.tryPort(port, quiet, false);
+      if (result === true) {
+        return true;
+      }
+      error = result;
+    }
+    if (this.searchPort && Date.now() - this.lastScan >= SCAN_EVERY_MS) {
+      this.lastScan = Date.now();
+      await this.setStatus("Searching the port of wireless debugging \u2026", true);
+      const ports = (await (0, import_portScan.findOpenPorts)(this.ip)).filter((p) => !candidates.includes(p));
+      this.adapter.log.debug(`${this.label}: open ports ${ports.join(", ") || "none"}`);
+      for (const port of ports) {
+        const result = await this.tryPort(port, true, false, SCAN_WAIT_MS);
+        if (result === true) {
+          this.adapter.log.info(`${this.label}: wireless debugging found on port ${port}`);
+          return true;
+        }
       }
     }
+    if (!candidates.length) {
+      this.discovery.refresh();
+    }
+    await this.setStatus(
+      error || (this.searchPort ? "Wireless debugging not found (switched off or device asleep?) - the port is searched again in a few minutes" : "Wireless debugging not found in the network (switched off or device asleep?)"),
+      quiet
+    );
+    await this.setConnected(false);
+    return false;
+  }
+  /**
+   * One connection attempt
+   *
+   * @param port port to try
+   * @param quiet log only at debug level
+   * @param report set the status on failure (else the caller does it)
+   * @param waitMs time for connecting and for the answer of the device
+   * @returns true when connected, else the reason
+   */
+  async tryPort(port, quiet, report, waitMs = WAIT_MS) {
     const serial = `${this.ip}:${port}`;
     if (this.serial && this.serial !== serial) {
       await this.client.disconnect(this.ip, (0, import_util.portOfSerial)(this.serial)).catch(() => void 0);
     }
     try {
-      await this.withTimeout(this.client.connect(this.ip, port), WAIT_MS, "connect timeout");
+      await this.withTimeout(this.client.connect(this.ip, port), waitMs, "connect timeout");
       this.serial = serial;
+      await this.withTimeout(this.device().waitForDevice(), waitMs, "device did not answer");
       await this.adapter.setState(this.stateId("port"), { val: port, ack: true });
-      await this.withTimeout(this.device().waitForDevice(), WAIT_MS, "device did not answer");
+      if (!this.fixedPort) {
+        this.lastPort = port;
+      }
       await this.onConnected();
       return true;
     } catch (e) {
       const msg = errorText(e);
-      if (!this.fixedPort && /refused|ECONNREFUSED/i.test(msg)) {
-        this.discovery.forgetConnect(this.ip, port);
-        this.discovery.refresh();
+      if (!this.fixedPort) {
+        if (/refused|ECONNREFUSED/i.test(msg)) {
+          this.discovery.forgetConnect(this.ip, port);
+          this.discovery.refresh();
+        }
+        if (port === this.lastPort) {
+          this.lastPort = void 0;
+        }
+        if (this.serial === serial) {
+          await this.client.disconnect(this.ip, port).catch(() => void 0);
+          this.serial = void 0;
+        }
       }
-      await this.setStatus(
-        /unauthorized|did not answer/i.test(msg) ? 'Device does not allow the connection: confirm "Allow debugging" on the device' : `Can not connect: ${msg}`,
-        quiet
-      );
+      const reason = /unauthorized|did not answer/i.test(msg) ? 'Device does not allow the connection: confirm "Allow debugging" on the device' : `Can not connect: ${msg}`;
+      if (!report) {
+        return reason;
+      }
+      await this.setStatus(reason, quiet);
       await this.setConnected(false);
       return false;
     }

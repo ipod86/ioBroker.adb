@@ -12,6 +12,8 @@ import { AndroidDevice, DEVICE_STATES, INFO_STATES, WIRELESS_STATES, errorText }
 import { Discovery } from './lib/discovery';
 import {
 	checkDevices,
+	deviceIdOf,
+	deviceObjectId,
 	isValidPairingCode,
 	normalizePairingCode,
 	pairingQrText,
@@ -157,6 +159,17 @@ class AdbAdapter extends utils.Adapter {
 	private async legacyId(cfg: DeviceConfig): Promise<string | undefined> {
 		const port = parsePort(cfg.port);
 		if (!port) {
+			return undefined;
+		}
+		if (cfg.portChanges) {
+			// a changing port is not part of the folder: say where the old one with the port is
+			for (const old of [legacyObjectId(cfg.ip, port), deviceObjectId(cfg.ip, port)]) {
+				if ((await this.getObjectAsync(old))?.type === 'device') {
+					this.log.info(
+						`${cfg.ip}: the states are now in ${deviceIdOf(cfg)} (without port) - the old folder ${old} can be deleted`,
+					);
+				}
+			}
 			return undefined;
 		}
 		const id = legacyObjectId(cfg.ip, port);

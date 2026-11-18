@@ -15,6 +15,11 @@ export interface DeviceConfig {
 	pollInterval?: number;
 	/** Hide the "wireless debugging connected" notification */
 	hideNotification?: boolean;
+	/**
+	 * The port entered is the one of wireless debugging and changes (Docker, where mDNS does not reach): the device
+	 * is handled as wireless device, its folder has no port and a new port is searched
+	 */
+	portChanges?: boolean;
 }
 
 /**
@@ -39,6 +44,15 @@ export function deviceObjectId(ip: string, port?: number): string {
 	// host names are not case-sensitive
 	const base = port ? `${ip.trim().toLowerCase()}:${port}` : ip.trim().toLowerCase();
 	return base.replace(/[.:]/g, '_').replace(/[^A-Za-z0-9_-]/g, '_');
+}
+
+/**
+ * Object id of a configured device: with the fixed port, without it for automatic and changing ports
+ *
+ * @param cfg device configuration
+ */
+export function deviceIdOf(cfg: Pick<DeviceConfig, 'ip' | 'port' | 'portChanges'>): string {
+	return deviceObjectId(String(cfg.ip ?? ''), cfg.portChanges ? undefined : parsePort(cfg.port));
 }
 
 /**
@@ -163,9 +177,11 @@ export function checkDevices(devices: DeviceConfig[] | undefined): { ok: DeviceC
 			continue;
 		}
 		const port = parsePort(d.port);
-		const id = deviceObjectId(ip, port);
+		const id = deviceIdOf({ ip, port: port ?? '', portChanges: d.portChanges === true });
 		if (seen.has(id)) {
-			problems.push(`Device ${ip}${port ? `:${port}` : ''} is listed twice, the second entry is skipped`);
+			problems.push(
+				`Device ${ip}${port ? `:${port}` : ''} uses the same folder ${id} as another device, the second entry is skipped`,
+			);
 			continue;
 		}
 		seen.add(id);

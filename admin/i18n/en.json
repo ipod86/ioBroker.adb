@@ -57,5 +57,7 @@
 	"%s – already in the device list": "%s – already in the device list",
 	"%s (%s) – new, added to the device list": "%s (%s) – new, added to the device list",
 	"Found in the network:\n%s\nNo new devices.": "Found in the network:\n%s\nNo new devices.",
-	"Found in the network:\n%s\nPair the new devices on the tab \"Pair\" and save the settings.": "Found in the network:\n%s\nPair the new devices on the tab \"Pair\" and save the settings."
+	"Found in the network:\n%s\nPair the new devices on the tab \"Pair\" and save the settings.": "Found in the network:\n%s\nPair the new devices on the tab \"Pair\" and save the settings.",
+	"Port changes": "Port changes",
+	"The port is the one of wireless debugging and changes (e.g. Docker without mDNS): the adapter searches the new port itself, the folder of the states has no port": "The port is the one of wireless debugging and changes (e.g. Docker without mDNS): the adapter searches the new port itself, the folder of the states has no port"
 }

@@ -142,9 +142,11 @@ Enter IP address and port (usually `5555`) in the device list. For phones a fixe
 
 When connecting the first time, the device asks to **allow USB debugging** for this computer – confirm it (tick "Always allow").
 
+**Docker without mDNS (port of wireless debugging entered by hand):** in a container mDNS often does not arrive, so the adapter cannot find the port of wireless debugging, which changes after every reboot. Enter the current port once and tick **"Port changes"**: the device is then handled as a wireless debugging device (all its functions), the states are in `adb.0.<ip>` without the port, and when the port has changed the adapter searches the new one itself (it tries the open ports of this device between 32768 and 60999, at most every 5 minutes; a device that is asleep is given up after a few seconds). The old folder with the port can be deleted (the log names it). Alternatively run the container with `network_mode: host`, then mDNS works and the port can stay empty.
+
 ## States
 
-For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port (dots replaced by `_`). Devices set up with version 0.0.x keep their old id `adb.0.<ip>:<port>`.
+For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port or with "Port changes" (dots replaced by `_`). Devices set up with version 0.0.x keep their old id `adb.0.<ip>:<port>`.
 
 | State | Description |
 |---|---|
@@ -179,6 +181,7 @@ Devices with a port keep their states and ids (`adb.0.<ip>:<port>`, with colon a
 -->
 ### **WORK IN PROGRESS**
 
+- (ipod86) Option "Port changes" per device: wireless debugging with a port entered by hand (Docker without mDNS) - the adapter searches the new port itself, the folder has no port
 - (ipod86) Wireless debugging (Android 11+): pairing with QR code or pairing code, automatic port discovery and reconnect
 - (ipod86) Stay connected after a reboot (automation app permission), hide the debugging notification
 - (ipod86) Device info: battery, charging, screen, app in the foreground, Wi-Fi, do not disturb, storage
