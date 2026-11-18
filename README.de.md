@@ -127,34 +127,31 @@ Die Werte werden mit einem kurzen Befehl pro Intervall gelesen; das weckt den Bi
 
 Solange eine Verbindung besteht, zeigt Android dauerhaft die Benachrichtigung „Kabelloses Debugging verbunden“. Sie gehört zu Android selbst und lässt sich in den Einstellungen nicht abschalten. In der Geräteliste in der Zeile des Geräts **Debug-Hinweis ausblenden** anhaken (oder den Datenpunkt `hideNotification` auf `true` setzen – das gilt bis zum nächsten Adapter-Neustart, beim Start entscheidet die Einstellung): Der Adapter schlummert die Benachrichtigung für die längste Zeit, die Android erlaubt, wiederholt das nach jeder Verbindung und erneuert es regelmäßig. `false` zeigt sie wieder an.
 
-### Port suchen (Docker, kein mDNS)
+### Docker und Netze ohne mDNS
 
-**Wann ist das relevant?** Beim kabellosen Debugging (ab Android 11) bekommt das Gerät bei jedem Einschalten des Debuggings einen **zufälligen Port** – nach jedem Neustart und wenn es aus- und wieder eingeschaltet wird. Einen Standard-Port gibt es nicht (`5555` ist nur der Port von `adb tcpip 5555`, siehe „TV-Boxen und fester Port“). Normalerweise erfährt der Adapter den aktuellen Port per **mDNS**, das Gerät meldet ihn im Netzwerk. In einem **Docker-Container** (Standard-Bridge-Netz), in getrennten VLANs oder hinter manchen Routern kommen diese Meldungen nicht an: Der Adapter findet das Gerät dann nicht, und ein von Hand eingetragener Port stimmt nach dem nächsten Neustart nicht mehr.
+**Wann ist das relevant?** Beim kabellosen Debugging (ab Android 11) bekommt das Gerät bei jedem Einschalten des Debuggings einen **zufälligen Port** – nach jedem Neustart und wenn es aus- und wieder eingeschaltet wird. Einen Standard-Port gibt es nicht (`5555` ist nur der Port von `adb tcpip 5555`, siehe „TV-Boxen und fester Port“). Normalerweise meldet das Gerät seinen aktuellen Port per **mDNS** und der Adapter übernimmt ihn. In einem **Docker-Container** (Standard-Bridge-Netz), in getrennten VLANs oder hinter manchen Routern kommen diese Meldungen nicht an. Der Adapter kommt damit selbst zurecht – eine Einstellung ist nicht nötig.
 
-**Einrichtung:**
+**Koppeln ohne mDNS:**
 
-1. Das Gerät wie gewohnt koppeln (Kopplungscode oder QR-Code; beim Kopplungscode den am Gerät angezeigten Kopplungsport eintragen, falls er nicht gefunden wird).
-2. In der Geräteliste die IP-Adresse eintragen und **„Port suchen“** anhaken. Ein Port darf zusätzlich eingetragen werden (der unter *Kabelloses Debugging → IP-Adresse & Port* angezeigte) – er wird nur zuerst probiert und darf sich ändern.
-3. Speichern. Das Gerät gilt als Gerät mit kabellosem Debugging: „Debug-Hinweis ausblenden“ und „Nach Neustart einschalten“ funktionieren wie bei jedem anderen kabellosen Gerät.
+- **Kopplungscode:** funktioniert. Den Code *und* den am Gerät angezeigten Kopplungsport eintragen (*Gerät über Kopplungscode koppeln → IP-Adresse & Port*) – ohne mDNS findet der Adapter den Kopplungsport nicht selbst.
+- **QR-Code:** funktioniert ohne mDNS nicht. Der QR-Code enthält nur einen Namen und ein Passwort; das Gerät antwortet per mDNS, und diese Antwort kommt nicht an. Stattdessen den Kopplungscode verwenden.
 
-**So verbindet der Adapter dann**, bei jeder Prüfung der Verbindungen (Einstellung „Verbindungen prüfen alle“, Standard 30 s):
+**Verbinden ohne mDNS:** Den Port leer lassen (oder den Port eintragen, den das Gerät unter *Kabelloses Debugging → IP-Adresse & Port* anzeigt – jeder Port ab 32768 gilt als Port des kabellosen Debuggings, nicht als fester Port, und wird nur zuerst probiert). Bei jeder Prüfung der Verbindungen (Einstellung „Verbindungen prüfen alle“, Standard 30 s) probiert der Adapter:
 
-1. mit dem per mDNS gemeldeten Port, falls einer ankommt;
-2. mit dem Port, der zuletzt funktioniert hat (anfangs der eingetragene);
-3. wenn beides nicht klappt: mit einer **Suche an diesem Gerät**. Der Adapter probiert eine TCP-Verbindung zu den Ports 32768–60999 dieser einen IP-Adresse (der Bereich, den Android für kabelloses Debugging vergibt) und versucht dann auf jedem gefundenen offenen Port adb. Im lokalen Netz dauert das etwa 5 Sekunden. Der gefundene Port wird in `port` geschrieben und ab dann verwendet.
+1. den per mDNS gemeldeten Port, falls einer ankommt;
+2. den Port, der zuletzt funktioniert hat;
+3. wenn beides nicht klappt und **mDNS dieses Gerät noch nie gemeldet hat**: eine **Suche an diesem Gerät**. Der Adapter probiert eine TCP-Verbindung zu den Ports 32768–60999 dieser einen IP-Adresse (der Bereich, den Android für kabelloses Debugging vergibt) und versucht dann auf jedem gefundenen offenen Port adb. Im lokalen Netz dauert das etwa 5 Sekunden. Der gefundene Port wird in `port` geschrieben und ab dann verwendet.
+
+Sobald mDNS das Gerät einmal meldet, merkt sich der Adapter das (im Geräteobjekt) und durchsucht dieses Gerät nie wieder – wo mDNS funktioniert, gibt es also gar keine Suche.
 
 Die Suche ist schonend:
 
-- gesucht wird nur an diesem einen Gerät, nie im ganzen Netz;
-- ein Gerät, das gar nicht antwortet (schläft, WLAN aus), wird nach etwa 1,5 Sekunden aufgegeben – der nächste Versuch folgt bei der nächsten Prüfung, ein Gerät wird also kurz nach dem Aufwachen gefunden;
+- gesucht wird nur an diesem einen Gerät, nie im ganzen Netz; nicht in den ersten 30 Sekunden nach dem Start (mDNS braucht einen Moment);
+- ein Gerät, das gar nicht antwortet (schläft, WLAN aus), wird nach etwa 1,5 Sekunden aufgegeben – der nächste Versuch folgt bei der nächsten Prüfung, ein Gerät wird also kurz nach dem Einschalten des Debuggings gefunden;
 - ein Gerät, das antwortet, aber keinen adb-Port hat (kabelloses Debugging aus), wird erst nach 2 Minuten wieder durchsucht;
 - auch andere Dienste auf dem Gerät können offene Ports haben; jeder bekommt höchstens 5 Sekunden, dann wird der nächste probiert.
 
-**Jetzt suchen:** Die Taste `searchPort` des Geräts startet sofort eine Suche (z. B. aus einem Skript, nachdem die Automations-App das Debugging eingeschaltet hat). Sie funktioniert auch bei kabellosen Geräten ohne die Option.
-
-**Ordner der Datenpunkte:** Mit „Port suchen“ liegen die Datenpunkte in `adb.0.<ip>` ohne Port, ein neuer Port legt also nie einen neuen Ordner an. Hatte das Gerät vorher einen Ordner mit Port, nennt ihn das Log beim Start – er kann gelöscht werden.
-
-**Alternative:** Den ioBroker-Container mit `network_mode: host` starten (oder per macvlan in einem eigenen Netz). Dann kommt mDNS an, der Port kann leer bleiben und es ist keine Suche nötig.
+**Alternative:** Den ioBroker-Container mit `network_mode: host` starten (oder per macvlan in einem eigenen Netz). Dann kommt mDNS an, QR-Codes funktionieren und es ist keine Suche nötig.
 
 ### TV-Boxen und fester Port
 
@@ -164,7 +161,7 @@ Beim ersten Verbinden fragt das Gerät, ob **USB-Debugging** für diesen Rechner
 
 ## Datenpunkte
 
-Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei festem Port, `adb.0.<ip>` bei automatischem Port oder mit „Port suchen“ (Punkte durch `_` ersetzt). Mit Version 0.0.x eingerichtete Geräte behalten ihre alte ID `adb.0.<ip>:<port>`.
+Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei festem Port, `adb.0.<ip>` bei automatischem Port (Punkte durch `_` ersetzt). Mit Version 0.0.x eingerichtete Geräte behalten ihre alte ID `adb.0.<ip>:<port>`.
 
 | Datenpunkt | Bedeutung |
 |---|---|
@@ -180,13 +177,12 @@ Für jedes Gerät wird ein Geräte-Objekt angelegt: `adb.0.<ip>_<port>` bei fest
 | `screencap` | Taste: Bildschirmfoto aufnehmen |
 | `result` | Antwort des letzten Befehls oder `error: …` |
 | `hideNotification` | nur kabellose Geräte: `true` blendet die Meldung „Kabelloses Debugging verbunden“ aus (Startwert aus der Einstellung „Debug-Hinweis ausblenden“) |
-| `searchPort` | nur kabellose Geräte: Taste – sucht sofort den Port des kabellosen Debuggings und verbindet (siehe „Port suchen“) |
 
 Bildschirmfotos werden als Dateien des Adapters gespeichert: `/adb.0/<Geräte-ID>.png` und wie bisher `/adb.0/screenshot.png` (immer das letzte). In vis lassen sie sich mit der URL `/files/adb.0/<Geräte-ID>.png` anzeigen.
 
 ## Update von 0.0.x
 
-Geräte mit Port behalten ihre Datenpunkte und IDs (`adb.0.<ip>:<port>`, wie bisher mit Doppelpunkt). Die bisherigen Einstellungen werden übernommen. Neu sind die Datenpunkte `status`, `port`, `model`, `androidVersion`, `keyevent` und – bei kabellosen Geräten – `hideNotification` und `searchPort`.
+Geräte mit Port behalten ihre Datenpunkte und IDs (`adb.0.<ip>:<port>`, wie bisher mit Doppelpunkt). Die bisherigen Einstellungen werden übernommen. Neu sind die Datenpunkte `status`, `port`, `model`, `androidVersion`, `keyevent` und – bei kabellosen Geräten – `hideNotification`.
 
 ## Changelog
 

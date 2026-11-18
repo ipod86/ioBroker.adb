@@ -127,19 +127,8 @@ class AdbAdapter extends utils.Adapter {
    * @param cfg device configuration
    */
   async legacyId(cfg) {
-    var _a;
     const port = (0, import_util.parsePort)(cfg.port);
     if (!port) {
-      return void 0;
-    }
-    if (cfg.portChanges) {
-      for (const old of [(0, import_util.legacyObjectId)(cfg.ip, port), (0, import_util.deviceObjectId)(cfg.ip, port)]) {
-        if (((_a = await this.getObjectAsync(old)) == null ? void 0 : _a.type) === "device") {
-          this.log.info(
-            `${cfg.ip}: the states are now in ${(0, import_util.deviceIdOf)(cfg)} (without port) - the old folder ${old} can be deleted`
-          );
-        }
-      }
       return void 0;
     }
     const id = (0, import_util.legacyObjectId)(cfg.ip, port);
@@ -288,7 +277,7 @@ class AdbAdapter extends utils.Adapter {
    * @param dev device
    */
   async createDeviceObjects(dev) {
-    var _a, _b;
+    var _a, _b, _c;
     const common = {
       name: dev.name,
       statusStates: { onlineId: `${this.namespace}.${dev.stateId("connection")}` }
@@ -299,21 +288,25 @@ class AdbAdapter extends utils.Adapter {
       for (const key of ["type", "role", "read", "write"]) {
         delete old[key];
       }
+      dev.mdnsSeen = ((_a = existing.native) == null ? void 0 : _a.mdnsSeen) === true;
       await this.setObject(dev.objectId, {
         ...existing,
         type: "device",
         common: { ...old, ...common },
-        native: { ...existing.native, ip: dev.ip, port: (_a = dev.fixedPort) != null ? _a : null }
+        native: { ...existing.native, ip: dev.ip, port: (_b = dev.fixedPort) != null ? _b : null }
       });
     } else {
       await this.setObject(dev.objectId, {
         type: "device",
         common,
-        native: { ip: dev.ip, port: (_b = dev.fixedPort) != null ? _b : null }
+        native: { ip: dev.ip, port: (_c = dev.fixedPort) != null ? _c : null }
       });
     }
     for (const [id, common2] of Object.entries(import_device.DEVICE_STATES)) {
       await this.extendObject(dev.stateId(id), { type: "state", common: common2, native: {} });
+    }
+    if (await this.getObjectAsync(dev.stateId("searchPort"))) {
+      await this.delObjectAsync(dev.stateId("searchPort"));
     }
     if (dev.pollMs) {
       await this.extendObject(`${dev.objectId}.info`, {
@@ -372,11 +365,6 @@ class AdbAdapter extends utils.Adapter {
     }
     const objectId = parts.pop();
     const dev = this.devices.find((d) => d.objectId === objectId);
-    if (dev && !dev.fixedPort && name === "searchPort") {
-      await this.setState(id, false, true);
-      void dev.searchPortNow();
-      return;
-    }
     if (dev && !dev.fixedPort && name === "hideNotification") {
       await dev.setHideNotification(state.val === true || state.val === "true" || state.val === 1);
       await this.setState(id, dev.hideNotification, true);

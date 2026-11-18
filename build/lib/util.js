@@ -21,15 +21,16 @@ __export(util_exports, {
   ADB_MIN_PAIRING: () => ADB_MIN_PAIRING,
   AUTOMATION_APPS: () => AUTOMATION_APPS,
   INFO_SEPARATOR: () => INFO_SEPARATOR,
+  WIRELESS_PORT_MIN: () => WIRELESS_PORT_MIN,
   checkDevices: () => checkDevices,
   cleanShellCommand: () => cleanShellCommand,
-  deviceIdOf: () => deviceIdOf,
   deviceObjectId: () => deviceObjectId,
   extractPng: () => extractPng,
   hostOfSerial: () => hostOfSerial,
   infoCommand: () => infoCommand,
   isPackageName: () => isPackageName,
   isValidPairingCode: () => isValidPairingCode,
+  isWirelessPort: () => isWirelessPort,
   legacyObjectId: () => legacyObjectId,
   normalizePairingCode: () => normalizePairingCode,
   pairSucceeded: () => pairSucceeded,
@@ -51,9 +52,9 @@ function deviceObjectId(ip, port) {
   const base = port ? `${ip.trim().toLowerCase()}:${port}` : ip.trim().toLowerCase();
   return base.replace(/[.:]/g, "_").replace(/[^A-Za-z0-9_-]/g, "_");
 }
-function deviceIdOf(cfg) {
-  var _a;
-  return deviceObjectId(String((_a = cfg.ip) != null ? _a : ""), cfg.portChanges ? void 0 : parsePort(cfg.port));
+const WIRELESS_PORT_MIN = 32768;
+function isWirelessPort(port) {
+  return !!port && port >= WIRELESS_PORT_MIN;
 }
 function hostOfSerial(serial) {
   const m = /^(.+):(\d+)$/.exec(serial);
@@ -109,7 +110,7 @@ function checkDevices(devices) {
       continue;
     }
     const port = parsePort(d.port);
-    const id = deviceIdOf({ ip, port: port != null ? port : "", portChanges: d.portChanges === true });
+    const id = deviceObjectId(ip, port);
     if (seen.has(id)) {
       problems.push(
         `Device ${ip}${port ? `:${port}` : ""} uses the same folder ${id} as another device, the second entry is skipped`
@@ -207,15 +208,16 @@ function parseInfo(output) {
   ADB_MIN_PAIRING,
   AUTOMATION_APPS,
   INFO_SEPARATOR,
+  WIRELESS_PORT_MIN,
   checkDevices,
   cleanShellCommand,
-  deviceIdOf,
   deviceObjectId,
   extractPng,
   hostOfSerial,
   infoCommand,
   isPackageName,
   isValidPairingCode,
+  isWirelessPort,
   legacyObjectId,
   normalizePairingCode,
   pairSucceeded,

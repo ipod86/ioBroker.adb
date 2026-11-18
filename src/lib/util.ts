@@ -15,11 +15,6 @@ export interface DeviceConfig {
 	pollInterval?: number;
 	/** Hide the "wireless debugging connected" notification */
 	hideNotification?: boolean;
-	/**
-	 * The port entered is the one of wireless debugging and changes (Docker, where mDNS does not reach): the device
-	 * is handled as wireless device, its folder has no port and a new port is searched
-	 */
-	portChanges?: boolean;
 }
 
 /**
@@ -46,13 +41,16 @@ export function deviceObjectId(ip: string, port?: number): string {
 	return base.replace(/[.:]/g, '_').replace(/[^A-Za-z0-9_-]/g, '_');
 }
 
+/** First port of the range Android gives wireless debugging; `adb tcpip` uses ports below (usually 5555) */
+export const WIRELESS_PORT_MIN = 32768;
+
 /**
- * Object id of a configured device: with the fixed port, without it for automatic and changing ports
+ * Whether a port entered by hand is the (changing) port of wireless debugging and not a fixed one of `adb tcpip`
  *
- * @param cfg device configuration
+ * @param port port
  */
-export function deviceIdOf(cfg: Pick<DeviceConfig, 'ip' | 'port' | 'portChanges'>): string {
-	return deviceObjectId(String(cfg.ip ?? ''), cfg.portChanges ? undefined : parsePort(cfg.port));
+export function isWirelessPort(port: number | undefined): boolean {
+	return !!port && port >= WIRELESS_PORT_MIN;
 }
 
 /**
@@ -177,7 +175,7 @@ export function checkDevices(devices: DeviceConfig[] | undefined): { ok: DeviceC
 			continue;
 		}
 		const port = parsePort(d.port);
-		const id = deviceIdOf({ ip, port: port ?? '', portChanges: d.portChanges === true });
+		const id = deviceObjectId(ip, port);
 		if (seen.has(id)) {
 			problems.push(
 				`Device ${ip}${port ? `:${port}` : ''} uses the same folder ${id} as another device, the second entry is skipped`,

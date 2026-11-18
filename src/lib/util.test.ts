@@ -5,7 +5,7 @@ import {
 	parseInfo,
 	checkDevices,
 	cleanShellCommand,
-	deviceIdOf,
+	isWirelessPort,
 	deviceObjectId,
 	extractPng,
 	isPackageName,
@@ -121,20 +121,21 @@ describe('util', () => {
 		expect(problems).to.have.length(2);
 	});
 
-	it('deviceIdOf leaves a changing port out of the folder (Docker without mDNS)', () => {
-		expect(deviceIdOf({ ip: '192.168.99.76', port: '5555' })).to.equal('192_168_99_76_5555');
-		expect(deviceIdOf({ ip: '192.168.99.76', port: '5555', portChanges: true })).to.equal('192_168_99_76');
-		expect(deviceIdOf({ ip: '192.168.99.76', port: '32769', portChanges: true })).to.equal('192_168_99_76');
-		expect(deviceIdOf({ ip: '192.168.99.80', port: '' })).to.equal('192_168_99_80');
+	it('isWirelessPort: ports of the wireless debugging range are no fixed ports', () => {
+		expect(isWirelessPort(5555)).to.equal(false);
+		expect(isWirelessPort(32767)).to.equal(false);
+		expect(isWirelessPort(32768)).to.equal(true);
+		expect(isWirelessPort(37175)).to.equal(true);
+		expect(isWirelessPort(undefined)).to.equal(false);
 	});
 
 	it('checkDevices: two entries in the same folder', () => {
 		const { ok, problems } = checkDevices([
-			{ enabled: true, name: 'Docker', ip: '192.168.99.76', port: '32769', portChanges: true },
 			{ enabled: true, name: 'Wireless', ip: '192.168.99.76', port: '' },
-			{ enabled: true, name: 'Other port', ip: '192.168.99.76', port: '5555' },
+			{ enabled: true, name: 'Again', ip: '192.168.99.76', port: '' },
+			{ enabled: true, name: 'Fixed port', ip: '192.168.99.76', port: '5555' },
 		]);
-		expect(ok.map(d => d.name)).to.deep.equal(['Docker', 'Other port']);
+		expect(ok.map(d => d.name)).to.deep.equal(['Wireless', 'Fixed port']);
 		expect(problems[0]).to.match(/same folder 192_168_99_76/);
 	});
 });

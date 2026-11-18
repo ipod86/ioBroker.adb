@@ -136,34 +136,31 @@ The values are read with one short command per interval; it does not wake the sc
 
 While connected, Android shows a permanent notification "Wireless debugging connected". It belongs to Android itself and cannot be switched off in the settings. Tick **Hide debug notice** in the row of the device in the device list (or set the state `hideNotification` to `true` – this switches it until the next adapter restart, the setting decides at start): the adapter snoozes the notification for the longest time Android allows, does it again after every connection and renews it regularly. `false` shows it again.
 
-### Search port (Docker, no mDNS)
+### Docker and networks without mDNS
 
-**When is this relevant?** With wireless debugging (Android 11 and newer) the device gets a **random port** every time debugging is switched on – after every reboot, and when it is switched off and on again. There is no standard port (`5555` is only the port of `adb tcpip 5555`, see "TV boxes and fixed port"). Normally the adapter learns the current port by **mDNS**, the device announces it in the network. In a **Docker container** (default bridge network), in separate VLANs or behind some routers these announcements do not arrive: the adapter then cannot find the device, and a port entered by hand is wrong after the next reboot.
+**When is this relevant?** With wireless debugging (Android 11 and newer) the device gets a **random port** every time debugging is switched on – after every reboot, and when it is switched off and on again. There is no standard port (`5555` is only the port of `adb tcpip 5555`, see "TV boxes and fixed port"). Normally the device announces its current port by **mDNS** and the adapter takes it from there. In a **Docker container** (default bridge network), in separate VLANs or behind some routers these announcements do not arrive. The adapter handles this by itself – no setting is needed.
 
-**Setup:**
+**Pairing without mDNS:**
 
-1. Pair the device as usual (pairing code or QR code; with a pairing code, enter the pairing port shown on the device if it is not found).
-2. Enter the IP address in the device list and tick **"Search port"**. A port may be entered as well (the one the device shows under *Wireless debugging → IP address & port*) – it is only tried first, it can change.
-3. Save. The device counts as a wireless debugging device: "Hide debug notice" and "Switch on after reboot" can be used as for any other wireless device.
+- **Pairing code:** works. Enter the code *and* the pairing port shown on the device (*Pair device with pairing code → IP address & port*) – without mDNS the adapter cannot find the pairing port itself.
+- **QR code:** does not work without mDNS. The QR code only holds a name and a password; the device answers by mDNS, and that answer does not arrive. Use the pairing code instead.
 
-**How the adapter connects then**, at every check of the connections (setting "Check connections every", default 30 s):
+**Connecting without mDNS:** leave the port empty (or enter the port the device shows under *Wireless debugging → IP address & port* – any port from 32768 counts as port of wireless debugging, not as fixed port, and is only tried first). At every check of the connections (setting "Check connections every", default 30 s) the adapter tries:
 
 1. the port announced by mDNS, if one arrives;
-2. the port that worked last (at first the one entered);
-3. if both fail: a **search on this device**. The adapter tries a TCP connection to the ports 32768–60999 of this one IP address (the range Android gives wireless debugging) and then tries adb on each open port it found. In the local network this takes about 5 seconds. The port found is written to `port` and used from then on.
+2. the port that worked last;
+3. if both fail and **mDNS has never announced this device**: a **search on this device**. The adapter tries a TCP connection to the ports 32768–60999 of this one IP address (the range Android gives wireless debugging) and then tries adb on each open port it found. In the local network this takes about 5 seconds. The port found is written to `port` and used from then on.
+
+As soon as mDNS announces the device once, the adapter remembers it (in the device object) and never searches this device again – where mDNS works there is no search at all.
 
 The search is gentle:
 
-- only this one device is searched, never the network;
-- a device that does not answer at all (asleep, Wi-Fi off) is given up after about 1.5 seconds – the next attempt follows at the next check, so a device is found shortly after it wakes up;
+- only this one device is searched, never the network; not in the first 30 seconds after the start (mDNS needs a moment);
+- a device that does not answer at all (asleep, Wi-Fi off) is given up after about 1.5 seconds – the next attempt follows at the next check, so a device is found shortly after debugging is switched on;
 - a device that answers but has no adb port (wireless debugging switched off) is searched again only after 2 minutes;
 - other services on the device can have open ports too; each one gets at most 5 seconds before the next is tried.
 
-**Search now:** the button `searchPort` of the device starts a search at once (e.g. from a script after the automation app has switched debugging on). It also works for wireless devices without the option.
-
-**Folder of the states:** with "Search port" the states are in `adb.0.<ip>` without the port, so a new port never creates a new folder. If the device had a folder with the port before, the log names it at the start – it can be deleted.
-
-**Alternative:** run the ioBroker container with `network_mode: host` (or in its own network with macvlan). Then mDNS arrives, the port can stay empty and no search is needed.
+**Alternative:** run the ioBroker container with `network_mode: host` (or in its own network with macvlan). Then mDNS arrives, QR codes work and no search is needed.
 
 ### TV boxes and fixed port
 
@@ -173,7 +170,7 @@ When connecting the first time, the device asks to **allow USB debugging** for t
 
 ## States
 
-For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port or with "Search port" (dots replaced by `_`). Devices set up with version 0.0.x keep their old id `adb.0.<ip>:<port>`.
+For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port, `adb.0.<ip>` for automatic port (dots replaced by `_`). Devices set up with version 0.0.x keep their old id `adb.0.<ip>:<port>`.
 
 | State | Description |
 |---|---|
@@ -189,13 +186,12 @@ For each device a device object is created: `adb.0.<ip>_<port>` for a fixed port
 | `screencap` | button: take a screenshot |
 | `result` | answer of the last command, or `error: …` |
 | `hideNotification` | only wireless devices: `true` hides the notification "Wireless debugging connected" (start value from the setting "Hide debug notice") |
-| `searchPort` | only wireless devices: button – searches the port of wireless debugging now and connects (see "Search port") |
 
 Screenshots are saved as files of the adapter: `/adb.0/<device id>.png` and, as before, `/adb.0/screenshot.png` (always the last one). In vis they can be shown with the URL `/files/adb.0/<device id>.png`.
 
 ## Updating from 0.0.x
 
-Devices with a port keep their states and ids (`adb.0.<ip>:<port>`, with colon as before). The old settings are taken over. New are the states `status`, `port`, `model`, `androidVersion`, `keyevent` and – for wireless devices – `hideNotification` and `searchPort`.
+Devices with a port keep their states and ids (`adb.0.<ip>:<port>`, with colon as before). The old settings are taken over. New are the states `status`, `port`, `model`, `androidVersion`, `keyevent` and – for wireless devices – `hideNotification`.
 
 ## More information
 
@@ -209,7 +205,7 @@ Devices with a port keep their states and ids (`adb.0.<ip>:<port>`, with colon a
 -->
 ### **WORK IN PROGRESS**
 
-- (ipod86) Option "Search port" per device for wireless debugging without mDNS (e.g. Docker): the adapter searches the port of the device itself, no port needs to be entered, the folder has no port; button `searchPort`
+- (ipod86) Wireless debugging without mDNS (e.g. Docker): the adapter searches the port of the device itself, without any setting; a port from 32768 entered by hand counts as port of wireless debugging
 - (ipod86) Wireless debugging (Android 11+): pairing with QR code or pairing code, automatic port discovery and reconnect
 - (ipod86) Stay connected after a reboot (automation app permission), hide the debugging notification
 - (ipod86) Device info: battery, charging, screen, app in the foreground, Wi-Fi, do not disturb, storage

@@ -37,14 +37,14 @@
 							"type": "text",
 							"attr": "name",
 							"title": "Name",
-							"width": "12%",
+							"width": "13%",
 							"default": ""
 						},
 						{
 							"type": "text",
 							"attr": "ip",
 							"title": "IP address",
-							"width": "13%",
+							"width": "14%",
 							"default": "",
 							"validator": "data.ip && data.ip.trim() !== ''",
 							"validatorNoSaveOnError": true,
@@ -54,18 +54,11 @@
 							"type": "text",
 							"attr": "port",
 							"title": "Port (empty = automatic)",
-							"width": "9%",
+							"width": "10%",
 							"default": "",
 							"validator": "!data.port || /^\\d{1,5}$/.test(String(data.port).trim())",
-							"validatorErrorText": "Only digits, or leave empty"
-						},
-						{
-							"type": "checkbox",
-							"attr": "portChanges",
-							"title": "Search port",
-							"tooltip": "Wireless debugging where mDNS does not arrive (e.g. Docker): the adapter searches the port itself, a port entered is only tried first. The folder of the states has no port",
-							"default": false,
-							"width": "8%"
+							"validatorErrorText": "Only digits, or leave empty",
+							"tooltip": "Empty for wireless debugging (Android 11+): the port is found by itself. A fixed port (adb tcpip, usually 5555) for TV boxes"
 						},
 						{
 							"type": "number",
@@ -74,21 +67,21 @@
 							"default": 60,
 							"min": 0,
 							"max": 3600,
-							"width": "9%"
+							"width": "10%"
 						},
 						{
 							"type": "checkbox",
 							"attr": "hideNotification",
 							"title": "Hide debug notice",
 							"default": false,
-							"disabled": "(!!data.port && !data.portChanges)",
+							"disabled": "(!!data.port && Number(data.port) < 32768)",
 							"width": "9%"
 						},
 						{
 							"type": "selectSendTo",
 							"attr": "automationApp",
 							"title": "Switch-on app",
-							"width": "17%",
+							"width": "19%",
 							"command": "listApps",
 							"jsonData": "{\"ip\": \"${data.ip}\"}",
 							"manual": true,
@@ -96,20 +89,20 @@
 							"alsoDependsOn": [
 								"ip"
 							],
-							"disabled": "(!!data.port && !data.portChanges)"
+							"disabled": "(!!data.port && Number(data.port) < 32768)"
 						},
 						{
 							"type": "sendTo",
 							"attr": "_grant",
 							"title": "Switch on after reboot",
-							"width": "17%",
+							"width": "19%",
 							"label": "Grant permission",
 							"command": "grantAutomation",
 							"jsonData": "{\"ip\": \"${data.ip}\", \"app\": \"${data.automationApp || ''}\"}",
 							"variant": "outlined",
 							"showProcess": true,
 							"timeout": 30000,
-							"disabled": "(!!data.port && !data.portChanges) || !data.ip"
+							"disabled": "(!!data.port && Number(data.port) < 32768) || !data.ip"
 						}
 					]
 				},

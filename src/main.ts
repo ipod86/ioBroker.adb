@@ -12,8 +12,6 @@ import { AndroidDevice, DEVICE_STATES, INFO_STATES, WIRELESS_STATES, errorText }
 import { Discovery } from './lib/discovery';
 import {
 	checkDevices,
-	deviceIdOf,
-	deviceObjectId,
 	isValidPairingCode,
 	normalizePairingCode,
 	pairingQrText,
@@ -159,17 +157,6 @@ class AdbAdapter extends utils.Adapter {
 	private async legacyId(cfg: DeviceConfig): Promise<string | undefined> {
 		const port = parsePort(cfg.port);
 		if (!port) {
-			return undefined;
-		}
-		if (cfg.portChanges) {
-			// a changing port is not part of the folder: say where the old one with the port is
-			for (const old of [legacyObjectId(cfg.ip, port), deviceObjectId(cfg.ip, port)]) {
-				if ((await this.getObjectAsync(old))?.type === 'device') {
-					this.log.info(
-						`${cfg.ip}: the states are now in ${deviceIdOf(cfg)} (without port) - the old folder ${old} can be deleted`,
-					);
-				}
-			}
 			return undefined;
 		}
 		const id = legacyObjectId(cfg.ip, port);
@@ -335,6 +322,7 @@ class AdbAdapter extends utils.Adapter {
 			for (const key of ['type', 'role', 'read', 'write']) {
 				delete old[key];
 			}
+			dev.mdnsSeen = existing.native?.mdnsSeen === true;
 			await this.setObject(dev.objectId, {
 				...existing,
 				type: 'device',
@@ -350,6 +338,10 @@ class AdbAdapter extends utils.Adapter {
 		}
 		for (const [id, common] of Object.entries(DEVICE_STATES)) {
 			await this.extendObject(dev.stateId(id), { type: 'state', common, native: {} });
+		}
+		// the button searchPort of a test version is gone: the port is searched by itself
+		if (await this.getObjectAsync(dev.stateId('searchPort'))) {
+			await this.delObjectAsync(dev.stateId('searchPort'));
 		}
 		if (dev.pollMs) {
 			await this.extendObject(`${dev.objectId}.info`, {
@@ -408,11 +400,6 @@ class AdbAdapter extends utils.Adapter {
 		}
 		const objectId = parts.pop();
 		const dev = this.devices.find(d => d.objectId === objectId);
-		if (dev && !dev.fixedPort && name === 'searchPort') {
-			await this.setState(id, false, true);
-			void dev.searchPortNow();
-			return;
-		}
 		if (dev && !dev.fixedPort && name === 'hideNotification') {
 			await dev.setHideNotification(state.val === true || state.val === 'true' || state.val === 1);
 			await this.setState(id, dev.hideNotification, true);

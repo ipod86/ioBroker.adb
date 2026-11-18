@@ -3,7 +3,8 @@ import type { Discovery } from './discovery';
 import { findOpenPorts } from './portScan';
 import {
 	cleanShellCommand,
-	deviceIdOf,
+	deviceObjectId,
+	isWirelessPort,
 	extractPng,
 	hostOfSerial,
 	infoCommand,
@@ -279,27 +280,6 @@ export const WIRELESS_STATES: Record<string, ioBroker.StateCommon> = {
 		def: false,
 		desc: 'true: the notification "Wireless debugging connected" is snoozed and snoozed again after every connection; false: shown again',
 	},
-	searchPort: {
-		name: {
-			en: 'Search the port now',
-			de: 'Port jetzt suchen',
-			ru: 'Искать порт сейчас',
-			pt: 'Procurar a porta agora',
-			nl: 'Poort nu zoeken',
-			fr: 'Chercher le port maintenant',
-			it: 'Cerca la porta ora',
-			es: 'Buscar el puerto ahora',
-			pl: 'Szukaj portu teraz',
-			uk: 'Шукати порт зараз',
-			'zh-cn': '立即查找端口',
-		},
-		type: 'boolean',
-		role: 'button',
-		read: false,
-		write: true,
-		def: false,
-		desc: 'Searches the port of wireless debugging on this device now (without mDNS, e.g. in Docker) and connects',
-	},
 };
 
 /** Snooze time of the debugging notification: one year, renewed after every connection */
@@ -540,14 +520,18 @@ export class AndroidDevice {
 	readonly ip: string;
 	readonly name: string;
 	readonly fixedPort?: number;
-	/** wireless debugging with a port entered by hand: the port changes, it is searched when mDNS does not help */
-	readonly searchPort: boolean;
+	/**
+	 * mDNS has announced this device at least once (kept in the device object). Until then mDNS may not reach the
+	 * adapter (Docker, VLAN), so the port of wireless debugging is searched
+	 */
+	mdnsSeen = false;
+	/** no search in the first seconds after the start: mDNS answers need a moment */
+	private readonly scanFrom = Date.now() + 30000;
 	/** port that worked last (or the one entered for a changing port) */
 	private lastPort?: number;
 	/** earliest time of the next search */
 	private nextScan = 0;
-	/** search at the next attempt, also without the option (button searchPort) */
-	private scanNow = false;
+
 	readonly objectId: string;
 	/** adb serial of the current connection, e.g. `192.168.1.5:41235` */
 	serial?: string;
@@ -582,13 +566,14 @@ export class AndroidDevice {
 	) {
 		this.ip = cfg.ip;
 		this.name = cfg.name || cfg.ip;
-		// a port that changes is no fixed port: the device is a wireless debugging device, the port a first guess
-		this.searchPort = cfg.portChanges === true;
-		this.fixedPort = this.searchPort ? undefined : parsePort(cfg.port);
-		this.lastPort = this.searchPort ? parsePort(cfg.port) : undefined;
+		// a port of the wireless debugging range entered by hand is no fixed port: it changes, it is a first guess
+		const port = parsePort(cfg.port);
+		this.fixedPort = isWirelessPort(port) ? undefined : port;
+		this.lastPort = isWirelessPort(port) ? port : undefined;
 		const poll = cfg.pollInterval === undefined || cfg.pollInterval === null ? 60 : Number(cfg.pollInterval);
 		this.pollMs = Number.isFinite(poll) && poll > 0 ? Math.min(3600, Math.max(10, poll)) * 1000 : 0;
-		this.objectId = objectId ?? deviceIdOf(cfg);
+		// the folder keeps the port entered, also a wireless one: it is not changed any more, the port is searched
+		this.objectId = objectId ?? deviceObjectId(this.ip, port);
 	}
 
 	/** Text for logs */
@@ -609,18 +594,6 @@ export class AndroidDevice {
 			return false;
 		}
 		return this.fixedPort ? portOfSerial(serial) === this.fixedPort : true;
-	}
-
-	/** Button searchPort: search the port of wireless debugging now and connect */
-	async searchPortNow(): Promise<boolean> {
-		if (this.fixedPort) {
-			return false;
-		}
-		if (this.connected && this.serial) {
-			return true;
-		}
-		this.scanNow = true;
-		return this.ensureConnected(false);
 	}
 
 	/**
@@ -646,9 +619,13 @@ export class AndroidDevice {
 		if (this.fixedPort) {
 			return this.tryPort(this.fixedPort, quiet, true);
 		}
-		const candidates = [...new Set([this.discovery.connectPort(this.ip), this.lastPort])].filter(
-			(p): p is number => !!p,
-		);
+		const announced = this.discovery.connectPort(this.ip);
+		if (announced && !this.mdnsSeen) {
+			// mDNS reaches the adapter: no search for this device from now on
+			this.mdnsSeen = true;
+			await this.adapter.extendObject(this.objectId, { native: { mdnsSeen: true } });
+		}
+		const candidates = [...new Set([announced, this.lastPort])].filter((p): p is number => !!p);
 		let error = '';
 		for (const port of candidates) {
 			const result = await this.tryPort(port, quiet, false);
@@ -657,8 +634,8 @@ export class AndroidDevice {
 			}
 			error = result;
 		}
-		if (this.scanNow || (this.searchPort && Date.now() >= this.nextScan)) {
-			this.scanNow = false;
+		const now = Date.now();
+		if (!this.mdnsSeen && now >= this.scanFrom && now >= this.nextScan) {
 			await this.setStatus('Searching the port of wireless debugging …', true);
 			const found = await findOpenPorts(this.ip);
 			// asleep: try again at the next check; awake without adb: debugging is off, not too often
@@ -681,7 +658,7 @@ export class AndroidDevice {
 		}
 		await this.setStatus(
 			error ||
-				(this.searchPort
+				(!this.mdnsSeen
 					? 'Wireless debugging not found (switched off or device asleep?) - the port is searched again'
 					: 'Wireless debugging not found in the network (switched off or device asleep?)'),
 			quiet,

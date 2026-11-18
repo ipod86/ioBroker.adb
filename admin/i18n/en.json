@@ -58,6 +58,5 @@
 	"%s (%s) – new, added to the device list": "%s (%s) – new, added to the device list",
 	"Found in the network:\n%s\nNo new devices.": "Found in the network:\n%s\nNo new devices.",
 	"Found in the network:\n%s\nPair the new devices on the tab \"Pair\" and save the settings.": "Found in the network:\n%s\nPair the new devices on the tab \"Pair\" and save the settings.",
-	"Search port": "Search port",
-	"Wireless debugging where mDNS does not arrive (e.g. Docker): the adapter searches the port itself, a port entered is only tried first. The folder of the states has no port": "Wireless debugging where mDNS does not arrive (e.g. Docker): the adapter searches the port itself, a port entered is only tried first. The folder of the states has no port"
+	"Empty for wireless debugging (Android 11+): the port is found by itself. A fixed port (adb tcpip, usually 5555) for TV boxes": "Empty for wireless debugging (Android 11+): the port is found by itself. A fixed port (adb tcpip, usually 5555) for TV boxes"
 }
